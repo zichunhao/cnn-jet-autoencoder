@@ -94,7 +94,23 @@ class DCNN(nn.Module):
         self.output_channel = output_channel
         self.hidden_channels = hidden_channels if (hidden_channels is not None) else []
         self.num_cnns = len(self.hidden_channels) + 1
-        self.kernel_sizes = kernel_sizes if isinstance(kernel_sizes, list) else [kernel_sizes] * self.num_cnns
+        if isinstance(kernel_sizes, list):
+            self.kernel_sizes = kernel_sizes
+        else:
+            if isinstance(kernel_sizes, int):
+                self.kernel_sizes = [kernel_sizes] * self.num_cnns
+            elif isinstance(kernel_sizes, tuple):
+                # must be a tuple of length 2
+                if len(kernel_sizes) != 2:
+                    raise ValueError(
+                        'Each kernel size must be a tuple of 2 integers. '
+                        f'Found: {len(kernel_sizes)=}.'
+                    )
+                self.kernel_sizes = [kernel_sizes] * self.num_cnns
+            else:
+                raise TypeError(
+                    f'kernel_sizes expected to be a int or a tuple of two int. Found: {type(kernel_sizes)}.'
+                )
         self.strides = strides if isinstance(strides, list) else [strides] * self.num_cnns
         self.paddings = paddings if isinstance(paddings, list) else [paddings] * self.num_cnns
         self.dilations = dilations if isinstance(dilations, list) else [dilations] * self.num_cnns
@@ -110,20 +126,19 @@ class DCNN(nn.Module):
         # neural networks
         # input -> output
         if len(self.hidden_channels) == 0:  
-            
             self.cnn = nn.Sequential(
                 nn.Conv2d(
-                    in_channels = self.input_channel, 
-                    out_channels = self.output_channel, 
-                    kernel_size = self.kernel_sizes[0], 
-                    stride = self.strides[0], 
-                    padding = self.paddings[0], 
-                    dilation = self.dilations[0], 
-                    groups = self.groups[0], 
-                    bias = self.biases[0], 
-                    padding_mode = self.padding_modes[0], 
-                    device = self.device, 
-                    dtype = self.dtype
+                    in_channels=self.input_channel, 
+                    out_channels=self.output_channel, 
+                    kernel_size=self.kernel_sizes[0], 
+                    stride=self.strides[0], 
+                    padding=self.paddings[0], 
+                    dilation=self.dilations[0], 
+                    groups=self.groups[0], 
+                    bias=self.biases[0], 
+                    padding_mode=self.padding_modes[0], 
+                    device=self.device, 
+                    dtype=self.dtype
                 ),
                 nn.LeakyReLU(
                     negative_slope=self.leaky_relu_negative_slopes[0],
