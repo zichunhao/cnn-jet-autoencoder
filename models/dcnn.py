@@ -12,6 +12,7 @@ class DCNN(nn.Module):
         output_channel: int,
         hidden_channels: Optional[List[int]],
         kernel_sizes: List[Union[int, Tuple[int]]],
+        conv_transpose: bool = False,
         strides: Union[List[int], int] = 1,
         paddings: Union[List[int], int] = 0, 
         dilations: Union[List[int], int] = 1, 
@@ -23,7 +24,7 @@ class DCNN(nn.Module):
         dtype: Optional[torch.dtype] = DEFAULT_DTYPE
     ):
         """Deep Convolutional Neural Network (DCNN).
-        For CNN specifications, see https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html.
+        For CNN specifications, see https://pytorch.org/docs/stable/generated/torch.conv.html.
 
         :param input_channel: Number of channels in the input image
         :type input_channel: int
@@ -35,6 +36,8 @@ class DCNN(nn.Module):
         :param kernel_sizes: Size or a list of sizes of the convolving kernel. 
             Assumed to be homogeneous if int.
         :type kernel_sizes: List[Union[int, Tuple[int]]]
+        :param conv_transpose: If True, use ConvTranspose2d instead of Conv2d, defaults to False.
+        :type conv_transpose: bool
         :param strides: Stride or or a list of strides of the convolution, defaults to 1. 
             Assumed to be homogeneous if int.
         :type strides: Union[List[int], int], optional
@@ -58,6 +61,8 @@ class DCNN(nn.Module):
         :param dtype: Model's data type, defaults to `torch.float64`
         :type dtype: Optional[torch.dtype], optional
         """
+        
+        conv = conv if not nn.Conv2d else nn.Conv2d
         
         # type checks
         if not (isinstance(hidden_channels, list) or (hidden_channels is None)):
@@ -127,7 +132,7 @@ class DCNN(nn.Module):
         # input -> output
         if len(self.hidden_channels) == 0:  
             self.cnn = nn.Sequential(
-                nn.Conv2d(
+                conv(
                     in_channels=self.input_channel, 
                     out_channels=self.output_channel, 
                     kernel_size=self.kernel_sizes[0], 
@@ -150,7 +155,7 @@ class DCNN(nn.Module):
         else:  
             # input -> hidden layers
             input_layer = nn.Sequential(
-                nn.Conv2d(
+                conv(
                     in_channels = self.input_channel, 
                     out_channels = self.hidden_channels[0], 
                     kernel_size = self.kernel_sizes[0], 
@@ -172,7 +177,7 @@ class DCNN(nn.Module):
             hidden_layers = nn.ModuleList()
             for i in range(self.num_cnns - 2):
                 hidden_layer = nn.Sequential(
-                    nn.Conv2d(
+                    conv(
                         in_channels = self.hidden_channels[i], 
                         out_channels = self.hidden_channels[i+1], 
                         kernel_size = self.kernel_sizes[i+1], 
@@ -193,7 +198,7 @@ class DCNN(nn.Module):
                 hidden_layers.append(hidden_layer)
             # last hidden layer -> output
             output_layer = nn.Sequential(
-                nn.Conv2d(
+                conv(
                     in_channels=self.hidden_channels[-1],
                     out_channels=self.output_channel,
                     kernel_size=self.kernel_sizes[-1],
