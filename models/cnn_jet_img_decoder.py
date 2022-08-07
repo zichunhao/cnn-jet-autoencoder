@@ -1,7 +1,7 @@
 from typing import List, Optional, Tuple, Union
 import torch
 from torch import nn
-from .const import DEFAULT_DEVICE, DEFAULT_DTYPE
+from ..const import DEFAULT_DEVICE, DEFAULT_DTYPE
 from .dcnn import DCNN
 from .linear2d import Linear2D
 
@@ -78,7 +78,7 @@ class CNNJetImgDecoder(nn.Module):
         :type output_leaky_relu_negative_slope: float, optional
         :param device: Model's device, defaults to gpu if available, otherwise cpu.
         :type device: Optional[torch.device], optional
-        :param dtype: Model's data type, defaults to `torch.float64`
+        :param dtype: Model's data type, defaults to `torch.float`
         :type dtype: Optional[torch.dtype], optional
         """        
         super().__init__()
@@ -188,7 +188,7 @@ class CNNJetImgDecoder(nn.Module):
                 negative_slope=output_leaky_relu_negative_slope,
                 inplace=False
             )
-        )
+        ).to(self.device, self.dtype)
         
            
     def l1_norm(self):
