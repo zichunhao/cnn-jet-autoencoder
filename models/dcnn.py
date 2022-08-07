@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from typing import List, Optional, Tuple, Union
-from .const import DEFAULT_DTYPE, DEFAULT_DEVICE
+from ..const import DEFAULT_DTYPE, DEFAULT_DEVICE
 
 class DCNN(nn.Module):
     "Deep Convolutional Neural Network (DCNN)."
@@ -58,7 +58,7 @@ class DCNN(nn.Module):
         :type leaky_relu_negative_slopes: Union[List[float], float]
         :param device: Model's device, defaults to 'cuda' if available, otherwise 'cpu'
         :type device: Optional[torch.device], optional
-        :param dtype: Model's data type, defaults to `torch.float64`
+        :param dtype: Model's data type, defaults to `torch.float`
         :type dtype: Optional[torch.dtype], optional
         """
         
@@ -100,6 +100,10 @@ class DCNN(nn.Module):
         self.hidden_channels = hidden_channels if (hidden_channels is not None) else []
         self.num_cnns = len(self.hidden_channels) + 1
         if isinstance(kernel_sizes, list):
+            if len(kernel_sizes) == 1:
+                # expand to the same length as hidden_channels
+                # assuming homogeneity within the network
+                kernel_sizes = [kernel_sizes[0]] * self.num_cnns
             self.kernel_sizes = kernel_sizes
         else:
             if isinstance(kernel_sizes, int):
@@ -116,18 +120,32 @@ class DCNN(nn.Module):
                 raise TypeError(
                     f'kernel_sizes expected to be a int or a tuple of two int. Found: {type(kernel_sizes)}.'
                 )
+        if isinstance(strides, list) and (len(strides) == 1):
+            strides = strides[0]
         self.strides = strides if isinstance(strides, list) else [strides] * self.num_cnns
+        if isinstance(paddings, list) and (len(paddings) == 1):
+            paddings = paddings[0]
         self.paddings = paddings if isinstance(paddings, list) else [paddings] * self.num_cnns
+        if isinstance(dilations, list) and (len(dilations) == 1):
+            dilations = dilations[0]
         self.dilations = dilations if isinstance(dilations, list) else [dilations] * self.num_cnns
+        if isinstance(groups, list) and (len(groups) == 1):
+            groups = groups[0]
         self.groups = groups if isinstance(groups, list) else [groups] * self.num_cnns
+        if isinstance(biases, list) and (len(biases) == 1):
+            biases = biases[0]
         self.biases = biases if isinstance(biases, list) else [biases] * self.num_cnns
+        if isinstance(padding_modes, list) and (len(padding_modes) == 1):
+            padding_modes = padding_modes[0]
         self.padding_modes = padding_modes if isinstance(padding_modes, list) else [padding_modes] * self.num_cnns
+        if isinstance(leaky_relu_negative_slopes, list) and (len(leaky_relu_negative_slopes) == 1):
+            leaky_relu_negative_slopes = leaky_relu_negative_slopes[0]
         self.leaky_relu_negative_slopes = leaky_relu_negative_slopes if isinstance(
             leaky_relu_negative_slopes, list
         ) else [leaky_relu_negative_slopes] * self.num_cnns
         self.device = device
         self.dtype = dtype
-        
+
         # neural networks
         # input -> output
         if len(self.hidden_channels) == 0:  
