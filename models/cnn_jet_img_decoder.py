@@ -109,8 +109,12 @@ class CNNJetImgDecoder(nn.Module):
                  raise ValueError(err_msg)
             else:
                 unflatten_img_size = tuple(unflatten_img_size)
-        elif isinstance(unflatten_img_size, tuple):
-            if len(unflatten_img_size) != 2:
+        elif isinstance(unflatten_img_size, tuple) or isinstance(unflatten_img_size, list):
+            if len(unflatten_img_size) == 1:  # assumed to be square
+                unflatten_img_size = (unflatten_img_size, unflatten_img_size)
+            elif len(unflatten_img_size) == 2:
+                pass
+            else:
                 raise ValueError(err_msg)
         elif isinstance(unflatten_img_size, int):
             unflatten_img_size = (unflatten_img_size, unflatten_img_size)
