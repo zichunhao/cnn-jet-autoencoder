@@ -62,7 +62,7 @@ class DCNN(nn.Module):
         :type dtype: Optional[torch.dtype], optional
         """
         
-        conv = conv if not nn.Conv2d else nn.Conv2d
+        conv = nn.ConvTranspose2d if conv_transpose else nn.Conv2d
         
         # type checks
         if not (isinstance(hidden_channels, list) or (hidden_channels is None)):
@@ -137,7 +137,9 @@ class DCNN(nn.Module):
         self.biases = biases if isinstance(biases, list) else [biases] * self.num_cnns
         if isinstance(padding_modes, list) and (len(padding_modes) == 1):
             padding_modes = padding_modes[0]
-        self.padding_modes = padding_modes if isinstance(padding_modes, list) else [padding_modes] * self.num_cnns
+        self.padding_modes = padding_modes if isinstance(
+            padding_modes, list
+        ) else [padding_modes] * self.num_cnns
         if isinstance(leaky_relu_negative_slopes, list) and (len(leaky_relu_negative_slopes) == 1):
             leaky_relu_negative_slopes = leaky_relu_negative_slopes[0]
         self.leaky_relu_negative_slopes = leaky_relu_negative_slopes if isinstance(
@@ -145,6 +147,7 @@ class DCNN(nn.Module):
         ) else [leaky_relu_negative_slopes] * self.num_cnns
         self.device = device
         self.dtype = dtype
+        self.conv_transpose = conv_transpose
 
         # neural networks
         # input -> output
