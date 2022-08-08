@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from typing import List, Optional, Tuple, Union
-from ..const import DEFAULT_DTYPE, DEFAULT_DEVICE
+from utils import DEFAULT_DTYPE, DEFAULT_DEVICE
 
 class DCNN(nn.Module):
     "Deep Convolutional Neural Network (DCNN)."
@@ -108,7 +108,7 @@ class DCNN(nn.Module):
         else:
             if isinstance(kernel_sizes, int):
                 self.kernel_sizes = [kernel_sizes] * self.num_cnns
-            elif isinstance(kernel_sizes, tuple):
+            elif isinstance(kernel_sizes, (tuple, list)):
                 # must be a tuple of length 2
                 if len(kernel_sizes) != 2:
                     raise ValueError(

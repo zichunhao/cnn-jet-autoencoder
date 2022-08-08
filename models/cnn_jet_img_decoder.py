@@ -1,9 +1,9 @@
 from typing import List, Optional, Tuple, Union
 import torch
 from torch import nn
-from ..const import DEFAULT_DEVICE, DEFAULT_DTYPE
 from .dcnn import DCNN
 from .linear2d import Linear2D
+from utils import DEFAULT_DEVICE, DEFAULT_DTYPE
 
 class CNNJetImgDecoder(nn.Module):
     """CNN decoder for jet images that decodes vectors of size 
@@ -21,7 +21,7 @@ class CNNJetImgDecoder(nn.Module):
         unflatten_img_size: Union[Tuple[int, int], int],
         cnn_channels: List[int],
         cnn_kernel_sizes: List[Union[int, Tuple[int]]],
-        unflatten_leaky_relu_negative_slope: Union[List[float], float] = 0.01,
+        unflatten_leaky_relu_negative_slope: float = 0.01,
         unflatten_hidden_widths: Optional[List[int]] = None,
         cnn_strides: Union[List[int], int] = 1,
         cnn_paddings: Union[List[int], int] = 0,
@@ -109,9 +109,9 @@ class CNNJetImgDecoder(nn.Module):
                  raise ValueError(err_msg)
             else:
                 unflatten_img_size = tuple(unflatten_img_size)
-        elif isinstance(unflatten_img_size, tuple) or isinstance(unflatten_img_size, list):
+        elif isinstance(unflatten_img_size, (tuple, list)):
             if len(unflatten_img_size) == 1:  # assumed to be square
-                unflatten_img_size = (unflatten_img_size, unflatten_img_size)
+                unflatten_img_size = (unflatten_img_size[0], unflatten_img_size[0])
             elif len(unflatten_img_size) == 2:
                 pass
             else:

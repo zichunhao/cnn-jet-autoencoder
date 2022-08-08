@@ -1,7 +1,7 @@
 from typing import Optional
 import torch
 from torch import nn
-from ..const import DEFAULT_DEVICE, DEFAULT_DTYPE
+from utils import DEFAULT_DEVICE, DEFAULT_DTYPE
 
 class Linear2D(nn.Module):
     """Linear network for 2D feature: 

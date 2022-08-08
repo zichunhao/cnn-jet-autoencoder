@@ -2,8 +2,8 @@ from functools import reduce
 from typing import List, Optional, Tuple, Union
 import torch
 from torch import nn
-from ..const import DEFAULT_DEVICE, DEFAULT_DTYPE
 from .dcnn import DCNN
+from utils import DEFAULT_DEVICE, DEFAULT_DTYPE
 
 class CNNJetImgEncoder(nn.Module):
     """CNN autoencoder for jet images that
