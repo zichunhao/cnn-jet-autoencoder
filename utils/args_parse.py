@@ -1,9 +1,25 @@
 import argparse
+import logging
 import torch
+from math import inf
 from .const import DEFAULT_DEVICE, DEFAULT_DTYPE
 
+def parse_data_settings(parser: argparse.ArgumentParser) -> argparse.Namespace:
+    parser.add_argument(
+        '--data-path', '-dp',
+        type=str, metavar='',
+        help='Path to the training data (jet images).'
+    )
+    parser.add_argument(
+        '--normalize',
+        default=False, action='store_true', metavar='',
+        help='Whether to normalize the jet images.'
+    )
+    return parser
+
 def parse_training_settings(
-    parser: argparse.ArgumentParser
+    parser: argparse.ArgumentParser,
+    test: bool = False
 ) -> argparse.Namespace:
     parser.add_argument(
         '--learning-rate', '-lr',
@@ -15,6 +31,76 @@ def parse_training_settings(
         type=int, metavar='', default=256,
         help='Batch size of training.'
     )
+    parser.add_argument(
+        '--optimizer', '-o',
+        type=str, metavar='', default='adam',
+        help='Optimizer to be used in the training. '
+        'Supported choices: (adam, rmsprop)'
+    )
+    parser.add_argument(
+        '--num-epochs', '-e',
+        type=int, default=1000, metavar='',
+        help='Number of epochs for training.'
+    )
+    
+    # device and dtype
+    parser.add_argument(
+        '--device',
+        type=get_dtype, metavar='', default=DEFAULT_DEVICE,
+        help='Device for training the model. Default: gpu if available, otherwise cpu.'
+    )
+    parser.add_argument(
+        '--dtype',
+        type=get_device, metavar='', default=DEFAULT_DTYPE,
+        help='Data type of the model.'
+    )
+
+    # regularizations
+    parser.add_argument(
+        '--l1-lambda',
+        type=float, default=1e-8, metavar='',
+        help='Penalty for L1 regularization. Set to 0 to disable.'
+    )
+    parser.add_argument(
+        '--l2-lambda',
+        type=float, default=0, metavar='',
+        help='Penalty for L2 regularization. Set to 0 to disable.'
+    )
+    
+    # Loading existing models
+    # Used for test or when --load-to-train is True
+    parser.add_argument(
+        '--load-weight-path',
+        type=str, default=None, metavar='',
+        help='Path of the trained model to load.'
+    )
+    parser.add_argument(
+        '--load-epoch',
+        type=int, default=1, metavar='',
+        help='Epoch number of the trained model to load.'
+    )
+    
+    # training
+    if not test:
+        parser.add_argument(
+            '--load-to-train',
+            default=False, action='store_true',
+            help='Whether to load existing (trained) weights for training. '
+            'If False, --load-weight-path and --load-epoch are ignored.'
+        )
+        parser.add_argument(
+            '--patience', '-p',
+            type=get_patience, default=-1, metavar='',
+            help='Patience for early stopping. Use -1 for no early stopping.'
+        )
+        
+    # saving
+    parser.add_argument(
+        '--save-path', '-s',
+        type=str, metavar='',
+        help='Path to save results (weights, plots, etc.).'
+    )
+    return parser
     
 
 def parse_model_settings(
@@ -35,16 +121,6 @@ def parse_model_settings(
         '--latent-vector-size', '-L',
         type=int, metavar='',
         help='Size of the vector in the latent space.'
-    )
-    parser.add_argument(
-        '--device',
-        type=torch.device, metavar='', default=DEFAULT_DEVICE,
-        help='Device for training the model.'
-    )
-    parser.add_argument(
-        '--dtype',
-        type=torch.dtype, metavar='', default=DEFAULT_DEVICE,
-        help='Data type of the model.'
     )
     
     # encoder
@@ -181,3 +257,70 @@ def parse_model_settings(
     )
     
     return parser
+
+
+def parse_plot_settings(
+    parser: argparse.ArgumentParser
+) -> argparse.ArgumentParser:
+    parser.add_argument(
+        '--plot-start-epoch', 
+        type=int, metavar='', default=100,
+        help="Epoch after which the plots start."
+    )
+    parser.add_argument(
+        '--plot-freq',
+        type=int, metavar='', default=100,
+        help="Frequency to plot (plot / epoch)."
+    )
+    
+    # jet images settings
+    parser.add_argument(
+        '--num-jet-imgs',
+        type=int, metavar='', default=10,
+        help="Number of example jet images to show."
+    )
+    parser.add_argument(
+        '--max-R',
+        type=float, metavar='', default=0.6,
+        help="Maximum DeltaR of the jets."
+    )
+    return parser
+
+###################### helper functions ######################
+def get_device(arg: argparse.Namespace) -> torch.dtype:
+    """Parse torch.device from input string"""
+    if arg.lower() == 'cpu':
+        return torch.device('cpu')
+    elif 'cuda' in arg.lower() or 'gpu' in arg.lower():
+        return torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    else:
+        logging.warning(
+            f"{arg} is not a recognizable device. "
+            f"Defaulting to {DEFAULT_DEVICE}.")
+        return DEFAULT_DEVICE
+
+
+def get_dtype(arg: argparse.Namespace) -> torch.dtype:
+    """Parse torch.dtype from input string"""
+
+    if arg.lower() in ('float32', 'float64'):
+        return torch.float
+    elif arg.lower() in ('double', 'float64'):
+        return torch.float64
+    else:
+        logging.warning(
+            f"{arg} is not a recognizable device. "
+            f"Defaulting to {DEFAULT_DTYPE}."
+        )
+        return DEFAULT_DTYPE
+    
+def get_patience(arg: argparse.Namespace) -> int:
+    """
+    Parse patience from input string.
+    If input is inf or smaller than 0, return inf.
+    """
+    if arg.lower() == 'inf':
+        return inf
+    else:
+        p = int(arg)
+        return p if p > 0 else inf
