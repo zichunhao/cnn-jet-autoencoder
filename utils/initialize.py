@@ -3,10 +3,14 @@ from argparse import Namespace
 from typing import Tuple
 from torch.optim import Optimizer
 import torch
+from torch.utils.data import DataLoader
 
 import sys
+
+from .dataset import JetImageDataset
 sys.path.insert('../')
 from models import CNNJetImgEncoder, CNNJetImgDecoder
+
 
 def intialize_autoencoder(args: Namespace) -> Tuple[CNNJetImgEncoder, CNNJetImgDecoder]:
     """Intialize the encoder and decoder."""
@@ -50,6 +54,7 @@ def intialize_autoencoder(args: Namespace) -> Tuple[CNNJetImgEncoder, CNNJetImgD
     )
     return encoder, decoder
 
+
 def intialize_optimizers(
     args: Namespace,
     encoder: CNNJetImgEncoder,
@@ -62,6 +67,7 @@ def intialize_optimizers(
     elif args.optimizer.lower() == 'rmsprop':
         optimizer_encoder = torch.optim.RMSprop(encoder.parameters(), lr=args.lr)
         optimizer_decoder = torch.optim.RMSprop(decoder.parameters(), lr=args.lr)
+    # TODO: add more supported optimizers if necessary
     else:
         raise NotImplementedError(
             "Available choices are 'Adam' and 'RMSprop'. "
@@ -69,3 +75,23 @@ def intialize_optimizers(
         )
     return optimizer_encoder, optimizer_decoder
 
+
+def intialize_dataloader(args: Namespace, test: bool=False) -> DataLoader:
+    """Intialize the dataloader for training
+
+    :param test: Whether the data is for testing/inference purpose, defaults to False
+        If True, data will not be shuffled.
+    :type test: bool, optional
+    :return: _description_
+    :rtype: DataLoader
+    """    
+    jet_imgs = torch.load(args.data_path).to(device=args.device, dtype=args.dtype)
+    shuffle = not test  # do not shuffle if testing
+    dataset = JetImageDataset(
+        jet_imgs=jet_imgs, 
+        normalize=args.normalize, 
+        shuffle=shuffle, 
+        device=args.device, 
+        dtype=args.dtype
+    )
+    return DataLoader(dataset=dataset, batch_size=args.batch_size, shuffle=shuffle)
