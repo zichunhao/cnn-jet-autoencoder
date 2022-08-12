@@ -1,7 +1,7 @@
 import os
 import torch
 
-def mkdir(path: str) -> str:
+def mkdir(path: str, exist_ok: bool = True) -> str:
     """Make directory if it doesn't exist and return it.
 
     :param path: The path to the directory.
@@ -9,7 +9,7 @@ def mkdir(path: str) -> str:
     :return: path
     :rtype: str
     """    
-    os.makedirs(path, exist_ok=True)
+    os.makedirs(path, exist_ok=exist_ok)
     return path
 
 def get_compression_rate(
