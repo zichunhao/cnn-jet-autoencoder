@@ -1,7 +1,7 @@
 import logging
 import sys
-from time import time
-sys.path.insert('../')
+import time
+sys.path.insert(1, '../')
 import math
 
 import torch
@@ -32,10 +32,10 @@ def train_loop(
     """Train the autoencoder.
 
     :type args: Namespace
-    :param train_loader: Dataloader for training data。
+    :param train_loader: Dataloader for training data.
     :type train_loader: torch.utils.data.DataLoader
     :param valid_loader: DataLoader for validation data
-    :type valid_loader: torch.utils.data.DataLoader。
+    :type valid_loader: torch.utils.data.DataLoader.
     :param encoder: Encoder model.
     :type encoder: CNNJetImgEncoder
     :param decoder: Decoder model.
@@ -63,7 +63,10 @@ def train_loop(
         'valid': mkdir(osp.join(path, 'jet_images/valid'))
     }
     path_eval = mkdir(osp.join(path, 'eval'))  # for losses and dt
-    path_results = mkdir(osp.join(path, 'results'))  # for reconstructed images
+    path_results = {
+        'train': mkdir(osp.join(path, 'results/train')),
+        'valid': mkdir(osp.join(path, 'results/valid'))
+    } # for reconstructed images
     
     criterion = nn.MSELoss()
     
@@ -97,7 +100,7 @@ def train_loop(
             num_stale_epochs = 0
             best_epoch = ep + 1
             torch.save(
-                encoder.state_dict().cpu(), 
+                encoder.state_dict(), 
                 osp.join(path, "weights_encoder/best_weights_encoder.pt")
             )
             torch.save(
@@ -130,17 +133,17 @@ def train_loop(
                 )
             
             # save results for monitoring along the way
-            torch.save(imgs_target_train, osp.join(path_results, f"train/imgs_target_epoch_{curr_ep}.pt"))
-            torch.save(imgs_recons_train, osp.join(path_results, f"train/imgs_recons_epoch_{curr_ep}.pt"))
-            torch.save(latent_spaces_train, osp.join(path_results, f"train/latent_epoch_{curr_ep}.pt"))
+            torch.save(imgs_target_train, osp.join(path_results["train"], f"imgs_target_epoch_{curr_ep}.pt"))
+            torch.save(imgs_recons_train, osp.join(path_results["train"], f"imgs_recons_epoch_{curr_ep}.pt"))
+            torch.save(latent_spaces_train, osp.join(path_results["train"], f"latent_epoch_{curr_ep}.pt"))
             
-            torch.save(imgs_target_valid, osp.join(path_results, f"valid/imgs_target_epoch_{curr_ep}.pt"))
-            torch.save(imgs_recons_valid, osp.join(path_results, f"valid/latent_epoch_{curr_ep}.pt"))
-            torch.save(latent_spaces_valid, osp.join(path_results, f"valid/latent_epoch_{curr_ep}.pt"))
+            torch.save(imgs_target_valid, osp.join(path_results["valid"], f"imgs_target_epoch_{curr_ep}.pt"))
+            torch.save(imgs_recons_valid, osp.join(path_results["valid"], f"latent_epoch_{curr_ep}.pt"))
+            torch.save(latent_spaces_valid, osp.join(path_results["valid"], f"latent_epoch_{curr_ep}.pt"))
             
-            np.savetxt(path_eval, losses_train)
-            np.savetxt(path_eval, losses_valid)
-            np.savetxt(path_eval, dts)
+            np.savetxt(osp.join(path_eval, "losses_train.txt"), losses_train)
+            np.savetxt(osp.join(path_eval, "losses_valid.txt"), losses_valid)
+            np.savetxt(osp.join(path_eval, "dts.txt"), dts)
             
         # loggings
         total_epochs = start_epoch + args.num_epochs
@@ -202,9 +205,9 @@ def validate(
     loader: DataLoader, 
     encoder: CNNJetImgEncoder, 
     decoder: CNNJetImgDecoder, 
+    criterion: nn.Module,
     epoch: int, 
-    save_path: str, 
-    criterion: nn.Module
+    save_path: str
 ):
     """Validate the autoencoder `(encoder, decoder)` 
     using the data in `loader`
@@ -330,9 +333,9 @@ def _train_valid_test(
         batch_loss = criterion(img_recons, img_target)
         # regularization
         if args.l1_lambda > 0:
-            batch_loss += args.l1_lambda * (encoder.l1_norm() + decoder.l1_norm)
+            batch_loss = batch_loss + args.l1_lambda * (encoder.l1_norm() + decoder.l1_norm())
         if args.l2_lambda > 0:
-            batch_loss += args.l2_lambda * (encoder.l2_norm() + decoder.l2_norm)
+            batch_loss = batch_loss + args.l2_lambda * (encoder.l2_norm() + decoder.l2_norm())
         
         epoch_total_loss += batch_loss.item()
         
@@ -390,10 +393,8 @@ def _train_valid_test(
 
     # save weights
     if mode == 'train':
-        torch.save(encoder.state_dict().cpu(),
-                   osp.join(encoder_weight_path, f"epoch_{epoch}_encoder_weights.pt"))
-        torch.save(decoder.state_dict().cpu(),
-                   osp.join(decoder_weight_path, f"epoch_{epoch}_decoder_weights.pt"))
+        torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch}_encoder_weights.pt"))
+        torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch}_decoder_weights.pt"))
     elif mode == 'test':
         test_dir = mkdir(osp.join(save_path, 'test'))
         torch.save(imgs_target, osp.join(test_dir, 'imgs_target.pt'))

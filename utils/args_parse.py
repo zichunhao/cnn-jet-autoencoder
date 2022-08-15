@@ -12,7 +12,7 @@ def parse_data_settings(parser: argparse.ArgumentParser) -> argparse.Namespace:
     )
     parser.add_argument(
         '--normalize',
-        default=False, action='store_true', metavar='',
+        default=False, action='store_true',
         help='Whether to normalize the jet images.'
     )
     return parser
@@ -41,6 +41,17 @@ def parse_training_settings(
         '--num-epochs', '-e',
         type=int, default=1000, metavar='',
         help='Number of epochs for training.'
+    )
+    
+    # training-validation split
+    parser.add_argument(
+        '--test-size',
+        type=float, default=0.35, metavar='',
+        help='If float, should be between 0.0 and 1.0 '
+        'and represent the proportion of the dataset '
+        'to include in the test split. '
+        'If int, represents the absolute number of test samples. '
+        'Reference: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html.'
     )
     
     # device and dtype
@@ -172,13 +183,13 @@ def parse_model_settings(
     )
     
     parser.add_argument(
-        '--encoder-flatten-leaky-relu-negative-slopes', 
-        nargs="+", type=float, metavar='', default=[0.01],
-        help='Negative slopes in the leaky relu layers '
+        '--encoder-flatten-leaky-relu-negative-slope', 
+        type=float, metavar='', default=0.01,
+        help='Negative slope in the leaky relu layers '
         'of the flatten layers in the encoder.'
     )
     parser.add_argument(
-        '--encoder-flatten-hidden-width',
+        '--encoder-flatten-hidden-widths',
         nargs="+", type=int, metavar='', default=[],
         help='Width of the hidden layers '
         'of the flatten layers in the encoder. '
@@ -187,7 +198,7 @@ def parse_model_settings(
 
     # decoder
     parser.add_argument(
-        '--decoder-unflatten-channels', '-dcc',
+        '--decoder-unflatten-channels', '-duc',
         nargs="+", type=int, metavar='',
         help='Channels in the decoder CNN model.'
     )
@@ -208,7 +219,7 @@ def parse_model_settings(
         'in the unflatten layer of the decoder.'
     )
     parser.add_argument(
-        '--decoder-unflatten-hidden-width',
+        '--decoder-unflatten-hidden-widths',
         nargs="+", type=int, metavar='', default=[],
         help='Width of hidden linear layers '
         'in the unflatten layer of the decoder.'
@@ -250,9 +261,9 @@ def parse_model_settings(
         'of the DCNN network in the decoder.'
     )
     parser.add_argument(
-        '--decoder-output-leaky-relu-negative-slopes', 
-        nargs="+", type=float, metavar='', default=[0.01],
-        help='Negative slopes in the output leaky relu layers '
+        '--decoder-output-leaky-relu-negative-slope', 
+        type=float, metavar='', default=0.01,
+        help='Negative slope in the output leaky relu layers '
         'of the flatten layers in the encoder.'
     )
     
@@ -280,7 +291,7 @@ def parse_plot_settings(
         help="Number of example jet images to show."
     )
     parser.add_argument(
-        '--max-R',
+        '--maxR',
         type=float, metavar='', default=0.6,
         help="Maximum DeltaR of the jets."
     )

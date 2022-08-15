@@ -67,6 +67,10 @@ class DCNN(nn.Module):
         # type checks
         if not (isinstance(hidden_channels, list) or (hidden_channels is None)):
             raise ValueError(f'hidden_channels must be a list of int or. Found: {type(hidden_channels)}.')
+        
+        expected_length = len(hidden_channels) + 1
+        
+        
         for param, name, expected_type in zip(
             (kernel_sizes, strides, paddings, dilations, groups, biases, biases, padding_modes),
             ('kernel_sizes', 'strides', 'paddings', 'dilations', 'groups', 'biases', 'biases', 'padding_modes'),
@@ -75,13 +79,12 @@ class DCNN(nn.Module):
             if isinstance(param, list):
                 # (len(hidden_channels) - 1) + 2  
                 # 1 for input layer and 1 for output layer
-                expected_length = len(hidden_channels) + 1  
-                if len(param) < expected_length:
+                if (len(param) < expected_length) and (len(param) != 1):
                     raise ValueError(
                         f'Not enough specification in {name}. '
                         f'If {name} is a list of parameters, '
                         f'it needs to have a length len(hidden_channels)+1 (i.e. {expected_length}), '
-                        'where the extra two parameters at the beginning and end'
+                        'where the extra two parameters at the beginning and end '
                         'accounts for the input and output layers, respectively.'
                     )
             elif isinstance(param, expected_type):  # homogeneous within the network

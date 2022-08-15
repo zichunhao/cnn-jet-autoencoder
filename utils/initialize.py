@@ -8,12 +8,13 @@ from torch.utils.data import DataLoader
 import sys
 
 from .dataset import JetImageDataset
-sys.path.insert('../')
+from sklearn.model_selection import train_test_split
+sys.path.insert(0, '../')
 from models import CNNJetImgEncoder, CNNJetImgDecoder
 
 
-def intialize_autoencoder(args: Namespace) -> Tuple[CNNJetImgEncoder, CNNJetImgDecoder]:
-    """Intialize the encoder and decoder."""
+def initialize_autoencoder(args: Namespace) -> Tuple[CNNJetImgEncoder, CNNJetImgDecoder]:
+    """Initialize the encoder and decoder."""
     encoder = CNNJetImgEncoder(
         input_height=args.img_height,
         input_width=args.img_width,
@@ -36,7 +37,7 @@ def intialize_autoencoder(args: Namespace) -> Tuple[CNNJetImgEncoder, CNNJetImgD
         latent_vector_size=args.latent_vector_size,
         output_height=args.img_height,
         output_width=args.img_width,
-        unflatten_img_size=encoder.dcnn_out_img_size,
+        unflatten_img_size=encoder.dcnn_out_img_size[1:],
         cnn_channels=args.decoder_cnn_channels,
         cnn_kernel_sizes=args.decoder_cnn_kernel_sizes,
         unflatten_leaky_relu_negative_slope=args.decoder_unflatten_leaky_relu_negative_slope,
@@ -55,18 +56,18 @@ def intialize_autoencoder(args: Namespace) -> Tuple[CNNJetImgEncoder, CNNJetImgD
     return encoder, decoder
 
 
-def intialize_optimizers(
+def initialize_optimizers(
     args: Namespace,
     encoder: CNNJetImgEncoder,
     decoder: CNNJetImgDecoder
 ) -> Tuple[Optimizer, Optimizer]:
     """Initialize optimizers for the encoder and decoder."""    
     if args.optimizer.lower() == 'adam':
-        optimizer_encoder = torch.optim.Adam(encoder.parameters(), args.lr)
-        optimizer_decoder = torch.optim.Adam(decoder.parameters(), args.lr)
+        optimizer_encoder = torch.optim.Adam(encoder.parameters(), args.learning_rate)
+        optimizer_decoder = torch.optim.Adam(decoder.parameters(), args.learning_rate)
     elif args.optimizer.lower() == 'rmsprop':
-        optimizer_encoder = torch.optim.RMSprop(encoder.parameters(), lr=args.lr)
-        optimizer_decoder = torch.optim.RMSprop(decoder.parameters(), lr=args.lr)
+        optimizer_encoder = torch.optim.RMSprop(encoder.parameters(), lr=args.learning_rate)
+        optimizer_decoder = torch.optim.RMSprop(decoder.parameters(), lr=args.learning_rate)
     # TODO: add more supported optimizers if necessary
     else:
         raise NotImplementedError(
@@ -76,22 +77,53 @@ def intialize_optimizers(
     return optimizer_encoder, optimizer_decoder
 
 
-def intialize_dataloader(args: Namespace, test: bool=False) -> DataLoader:
-    """Intialize the dataloader for training
+def initialize_dataloader(args: Namespace, test: bool=False) -> DataLoader:
+    """Initialize the dataloader for training
 
     :param test: Whether the data is for testing/inference purpose, defaults to False
         If True, data will not be shuffled.
     :type test: bool, optional
-    :return: _description_
+    :return: (train_loader, valid_loader) for train (`not test`) and test_loader if `test`
     :rtype: DataLoader
     """    
     jet_imgs = torch.load(args.data_path).to(device=args.device, dtype=args.dtype)
     shuffle = not test  # do not shuffle if testing
-    dataset = JetImageDataset(
-        jet_imgs=jet_imgs, 
-        normalize=args.normalize, 
-        shuffle=shuffle, 
-        device=args.device, 
-        dtype=args.dtype
-    )
-    return DataLoader(dataset=dataset, batch_size=args.batch_size, shuffle=shuffle)
+    if not test:  # training
+        jet_imgs_train, jet_imgs_valid = train_test_split(
+            jet_imgs,
+            test_size=args.test_size
+        )
+        dataset_train = JetImageDataset(
+            jet_imgs=jet_imgs_train, 
+            normalize=args.normalize, 
+            shuffle=shuffle, 
+            device=args.device, 
+            dtype=args.dtype
+        )
+        loader_train = DataLoader(
+            dataset=dataset_train, 
+            batch_size=args.batch_size, 
+            shuffle=shuffle
+        )
+        dataset_valid = JetImageDataset(
+            jet_imgs=jet_imgs_valid, 
+            normalize=args.normalize, 
+            shuffle=shuffle, 
+            device=args.device, 
+            dtype=args.dtype
+        )
+        loader_valid = DataLoader(
+            dataset=dataset_valid, 
+            batch_size=args.batch_size, 
+            shuffle=shuffle
+        )
+        return (loader_train, loader_valid)
+    else:
+        dataset = JetImageDataset(
+            jet_imgs=jet_imgs, 
+            normalize=args.normalize, 
+            shuffle=shuffle, 
+            device=args.device, 
+            dtype=args.dtype
+        )
+        return DataLoader(dataset=dataset, batch_size=args.batch_size, shuffle=shuffle)

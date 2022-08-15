@@ -11,7 +11,7 @@ def plot_jet_imgs(
     imgs_recons: Union[torch.Tensor, List[torch.Tensor]],
     num_imgs: int = 10,
     maxR: float = 0.6,
-    lognorm_vmin: bool = 1e-8,
+    vmin: bool = 1e-8,
     save_path: Optional[str] = None,
     epoch: Optional[int] = None,
     show: bool = False
@@ -30,9 +30,9 @@ def plot_jet_imgs(
     :type num_imgs: int, optional
     :param maxR: Maximum :math:`\Delta R` of the jet image, defaults to 0.6.
     :type maxR: float, optional
-    :param lognorm_vmin: vmin for LogNorm when plotting the average jet image,
+    :param vmin: vmin for the jet images,
     defaults to 1e-8
-    :type lognorm_vmin: bool, optional
+    :type vmin: bool, optional
     :param save_path: Path to save the plot, defaults to None. 
     If None, the plot will not be saved.
     :type save_path: Optional[str], optional
@@ -80,7 +80,7 @@ def plot_jet_imgs(
     # average jet image
     fig_target = axs[0][0].imshow(
         avg_img_target,
-        norm=LogNorm(vmin=lognorm_vmin, vmax=1),
+        norm=LogNorm(vmin=vmin, vmax=1),
         origin='lower',
         cmap=cm,
         interpolation='nearest',
@@ -90,7 +90,7 @@ def plot_jet_imgs(
 
     _ = axs[0][1].imshow(
         avg_img_recons,
-        norm=LogNorm(vmin=lognorm_vmin, vmax=1),
+        norm=LogNorm(vmin=vmin, vmax=1),
         origin='lower',
         cmap=cm,
         interpolation='nearest',

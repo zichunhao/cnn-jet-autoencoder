@@ -48,7 +48,7 @@ class JetImageDataset(Dataset):
         
         self.shuffle = shuffle
         if self.shuffle:
-            self.perm = torch.randperm(self.jet_imgs)
+            self.perm = torch.randperm(len(self.jet_imgs))
         else:
             self.perm = None
 
