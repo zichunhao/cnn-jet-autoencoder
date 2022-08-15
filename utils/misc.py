@@ -31,7 +31,7 @@ def get_compression_rate(
     :return: Compression rate of the autoencoder.
     :rtype: float
     """    
-    return (img_height * img_width) / latent_vector_size
+    return latent_vector_size / (img_height * img_width)
 
 
 def get_eps(dtype: torch.dtype) -> float:

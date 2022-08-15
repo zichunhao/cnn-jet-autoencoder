@@ -6,7 +6,8 @@ from utils import (
     parse_model_settings,
     parse_training_settings,
     parse_data_settings,
-    parse_plot_settings
+    parse_plot_settings,
+    get_compression_rate
 )
     
 
@@ -27,6 +28,12 @@ def main(args: argparse.Namespace):
     logging.info(f'{decoder=}')
     logging.info(f'{encoder.num_learnable_parameters=}')
     logging.info(f'{decoder.num_learnable_parameters=}')
+    compression_rate = get_compression_rate(
+        img_height=args.img_height, 
+        img_width=args.img_width, 
+        latent_vector_size=args.latent_vector_size
+    )
+    logging.info(f'compression rate: {compression_rate}')
     
     logging.info('Initialize optimizers')
     optim_encoder, optim_decoder = initialize_optimizers(
