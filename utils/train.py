@@ -78,13 +78,13 @@ def train_loop(
         imgs_target_train, imgs_recons_train, latent_spaces_train, loss_train = train(
             args, train_loader, encoder, decoder, 
             optimizer_encoder, optimizer_decoder, 
-            criterion, ep, args.save_path
+            criterion, curr_ep, args.save_path
         )
         
         # validation
         imgs_target_valid, imgs_recons_valid, latent_spaces_valid, loss_valid = validate(
             args, valid_loader, encoder, decoder, 
-            criterion, ep, args.save_path
+            criterion, curr_ep, args.save_path
         )
         
         dt = time.time() - start
