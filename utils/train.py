@@ -133,13 +133,13 @@ def train_loop(
                 )
             
             # save results for monitoring along the way
-            torch.save(imgs_target_train, osp.join(path_results["train"], f"imgs_target_epoch_{curr_ep}.pt"))
-            torch.save(imgs_recons_train, osp.join(path_results["train"], f"imgs_recons_epoch_{curr_ep}.pt"))
-            torch.save(latent_spaces_train, osp.join(path_results["train"], f"latent_epoch_{curr_ep}.pt"))
+            # torch.save(imgs_target_train, osp.join(path_results["train"], f"imgs_target_epoch_{curr_ep}.pt"))
+            # torch.save(imgs_recons_train, osp.join(path_results["train"], f"imgs_recons_epoch_{curr_ep}.pt"))
+            # torch.save(latent_spaces_train, osp.join(path_results["train"], f"latent_epoch_{curr_ep}.pt"))
             
-            torch.save(imgs_target_valid, osp.join(path_results["valid"], f"imgs_target_epoch_{curr_ep}.pt"))
-            torch.save(imgs_recons_valid, osp.join(path_results["valid"], f"latent_epoch_{curr_ep}.pt"))
-            torch.save(latent_spaces_valid, osp.join(path_results["valid"], f"latent_epoch_{curr_ep}.pt"))
+            # torch.save(imgs_target_valid, osp.join(path_results["valid"], f"imgs_target_epoch_{curr_ep}.pt"))
+            # torch.save(imgs_recons_valid, osp.join(path_results["valid"], f"latent_epoch_{curr_ep}.pt"))
+            # torch.save(latent_spaces_valid, osp.join(path_results["valid"], f"latent_epoch_{curr_ep}.pt"))
             
             np.savetxt(osp.join(path_eval, "losses_train.txt"), losses_train)
             np.savetxt(osp.join(path_eval, "losses_valid.txt"), losses_valid)
