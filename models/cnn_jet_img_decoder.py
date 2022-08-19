@@ -81,7 +81,7 @@ class CNNJetImgDecoder(nn.Module):
         :param dtype: Model's data type, defaults to `torch.float`
         :type dtype: Optional[torch.dtype], optional
         """        
-        super().__init__()
+        super(CNNJetImgDecoder, self).__init__()
         
         # member variables
         self.output_height = output_height

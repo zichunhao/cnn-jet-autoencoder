@@ -80,7 +80,7 @@ class CNNJetImgEncoder(nn.Module):
         :param dtype: Model's data type, defaults to `torch.float`
         :type dtype: Optional[torch.dtype], optional
         """        
-        super().__init__()
+        super(CNNJetImgEncoder, self).__init__()
         
         self.latent_vector_size = latent_vector_size
         if (cnn_channels is None) or (len(cnn_channels) <= 0):

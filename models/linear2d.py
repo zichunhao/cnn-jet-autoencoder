@@ -29,7 +29,7 @@ class Linear2D(nn.Module):
         :param out_width: Output width.
         :type out_width: int
         """        
-        super().__init__()
+        super(Linear2D, self).__init__()
         self.device = device if (device is not None) else DEFAULT_DEVICE
         self.dtype = dtype if (dtype is not None) else DEFAULT_DTYPE
         

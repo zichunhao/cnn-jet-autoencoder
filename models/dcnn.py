@@ -96,7 +96,7 @@ class DCNN(nn.Module):
                     f"Found: {type(param)}"
                 )
           
-        super().__init__()
+        super(DCNN, self).__init__()
         # member variables
         self.input_channel = input_channel
         self.output_channel = output_channel
