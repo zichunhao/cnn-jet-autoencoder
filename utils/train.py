@@ -9,13 +9,14 @@ from torch import nn
 from torch.utils.data import DataLoader
 from torch.optim import Optimizer
 
-from typing import Tuple
+from typing import Tuple, Union
 from argparse import Namespace
 from os import path as osp
 from tqdm import tqdm
 import numpy as np
 
 from .const import MODES, LOSS_BLOW_UP_THRESHOLD
+from .custom_mse_loss import CustomMSELoss
 from .misc import mkdir
 from .plot import plot_jet_imgs
 from models import CNNJetImgEncoder, CNNJetImgDecoder
@@ -27,7 +28,8 @@ def train_loop(
     encoder: CNNJetImgEncoder, 
     decoder: CNNJetImgDecoder,
     optimizer_encoder: Optimizer, 
-    optimizer_decoder: Optimizer
+    optimizer_decoder: Optimizer,
+    lambda_nz: Union[float, int]
 ) -> int:
     """Train the autoencoder.
 
@@ -44,6 +46,8 @@ def train_loop(
     :type optimizer_encoder: torch.optim.Optimizer
     :param optimizer_decoder: Optimizer for decoder.
     :type optimizer_decoder: torch.optim.Optimizer
+    :param lambda_nz: Weight for losses for pixels that are supposed to be zero.
+    :type lambda_nz: Union[float, int]
     :return: Best epoch number.
     :rtype: int
     """
@@ -68,7 +72,7 @@ def train_loop(
         'valid': mkdir(osp.join(path, 'results/valid'))
     } # for reconstructed images
     
-    criterion = nn.MSELoss()
+    criterion = CustomMSELoss(lambda_nz)
     
     for ep in range(args.num_epochs):
         curr_ep = start_epoch + ep  # current epoch

@@ -47,7 +47,8 @@ def main(args: argparse.Namespace):
         encoder=encoder,
         decoder=decoder,
         optimizer_encoder=optim_encoder,
-        optimizer_decoder=optim_decoder
+        optimizer_decoder=optim_decoder,
+        lambda_nz=args.lambda_nz
     )
     logging.info(f'Training completed. Best epoch: {best_ep}')
 

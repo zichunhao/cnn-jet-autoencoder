@@ -42,6 +42,12 @@ def parse_training_settings(
         type=int, default=1000, metavar='',
         help='Number of epochs for training.'
     )
+    parser.add_argument(
+        '--lambda-nz', '-lnz',
+        type=float, default=1e3, metavar='',
+        help='Weights MSELoss of pixels that are supposed to be zero. '
+        '(according to the target image).'
+    )
     
     # training-validation split
     parser.add_argument(
