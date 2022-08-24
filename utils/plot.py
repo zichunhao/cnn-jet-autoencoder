@@ -14,7 +14,8 @@ def plot_jet_imgs(
     vmin: bool = 1e-8,
     save_path: Optional[str] = None,
     epoch: Optional[int] = None,
-    show: bool = False
+    show: bool = False,
+    cutoff: Optional[float] = None
 ) -> None:
     """Plot a comparison of the target and reconstructed images.
     There will be 2 images per row, (target, reconstructed).
@@ -41,6 +42,9 @@ def plot_jet_imgs(
     :type epoch: Optional[int], optional
     :param show: Whether to show the image, defaults to False.
     :type show: bool, optional
+    :param cutoff: The value below which the entries will be ignored.
+        Disabled if None or non-positive, defaults to None.
+    :type cutoff: Optional[float], optional
     :raises RuntimeError: If `imgs_recons` and `img_target` 
     do not have the same number of jet images.
     """    
@@ -58,6 +62,9 @@ def plot_jet_imgs(
     # type check
     imgs_target = _type_correction(imgs_target)
     imgs_recons = _type_correction(imgs_recons)
+    if (not cutoff) and (cutoff > 0):
+        imgs_target = imgs_target[imgs_target > cutoff]
+        imgs_recons = imgs_recons[imgs_recons > cutoff]
     
     # mean jet image
     avg_img_target = torch.mean(imgs_target, dim=0)

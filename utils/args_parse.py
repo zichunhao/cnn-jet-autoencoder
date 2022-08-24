@@ -301,6 +301,12 @@ def parse_plot_settings(
         type=float, metavar='', default=0.6,
         help="Maximum DeltaR of the jets."
     )
+    parser.add_argument(
+        '--plot-cutoff',
+        type=float, metavar='', default=None,
+        help="The value below which the entries will be ignored. "
+        "Disabled if None or non-positive, defaults to None."
+    )
     return parser
 
 ###################### helper functions ######################
