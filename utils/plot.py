@@ -62,7 +62,7 @@ def plot_jet_imgs(
     # type check
     imgs_target = _type_correction(imgs_target)
     imgs_recons = _type_correction(imgs_recons)
-    if (not cutoff) and (cutoff > 0):
+    if (cutoff is not None) and (cutoff > 0):
         imgs_target = imgs_target[imgs_target > cutoff]
         imgs_recons = imgs_recons[imgs_recons > cutoff]
     
