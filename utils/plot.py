@@ -62,13 +62,14 @@ def plot_jet_imgs(
     # type check
     imgs_target = _type_correction(imgs_target)
     imgs_recons = _type_correction(imgs_recons)
-    if (cutoff is not None) and (cutoff > 0):
-        imgs_target = imgs_target[imgs_target > cutoff]
-        imgs_recons = imgs_recons[imgs_recons > cutoff]
     
     # mean jet image
     avg_img_target = torch.mean(imgs_target, dim=0)
     avg_img_recons = torch.mean(imgs_recons, dim=0)
+    
+    if (cutoff is not None) and (cutoff > 0):
+        imgs_target = imgs_target[imgs_target > cutoff]
+        imgs_recons = imgs_recons[imgs_recons > cutoff]
     
     # return to numpy
     imgs_target = imgs_target.cpu().numpy()
