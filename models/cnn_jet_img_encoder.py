@@ -27,6 +27,7 @@ class CNNJetImgEncoder(nn.Module):
         cnn_biases: Union[List[bool], bool] = True,
         cnn_padding_modes: Union[List[str], str] = 'zeros',
         cnn_leaky_relu_negative_slopes: Union[List[float], float] = 0.01,
+        cnn_use_intermediates: bool = False,
         flatten_leaky_relu_negative_slope: float = 0.01,
         flatten_hidden_widths: Optional[List[int]] = None,
         device: Optional[torch.device] = DEFAULT_DEVICE,
@@ -45,39 +46,42 @@ class CNNJetImgEncoder(nn.Module):
         :param cnn_channels: Channels in the DCNN model.
         :type cnn_channels: List[int]
         :param cnn_kernel_sizes: Kernel sizes (`kernel_sizes`) 
-            in the DCNN model.
+        in the DCNN model.
         :type cnn_kernel_sizes: List[Union[int, Tuple[int]]]
         :param cnn_strides: Strides (`strides`) in the DCNN model, 
-            defaults to 1
+        defaults to 1.
         :type cnn_strides: Union[List[int], int], optional
         :param cnn_paddings: Paddings (`paddings`) in the DCNN model, 
-            defaults to 0
+        defaults to 0.
         :type cnn_paddings: Union[List[int], int], optional
         :param cnn_dilations: Dilation (`dilations`) in the DCNN model, 
-            defaults to 1
+        defaults to 1.
         :type cnn_dilations: Union[List[int], int], optional
         :param cnn_groups: Groups (`groups`) in the DCNN model, 
-            defaults to 1
+        defaults to 1.
         :type cnn_groups: Union[List[int], int], optional
         :param cnn_biases: Biases (`biases`) in the DCNN model, 
-            defaults to True
+        defaults to True.
         :type cnn_biases: Union[List[bool], bool], optional
         :param cnn_padding_modes: Padding modes (`padding_modes`) 
-            in the DCNN model, defaults to 'zeros'
+        in the DCNN model, defaults to 'zeros'.
         :type cnn_padding_modes: Union[List[str], str], optional
         :param cnn_leaky_relu_negative_slopes: Negative slopes of the leaky relu layers 
-            in the CNNs, defaults to 0.01
+        in the CNNs, defaults to 0.01.
         :type cnn_leaky_relu_negative_slopes: float, optional
+        :param cnn_use_intermediates: Whether to keep track intermediate maps of CNNs, 
+        defaults to False.
+        :type cnn_use_intermediates: bool, optional
         :param flatten_leaky_relu_negative_slope: `leaky_relu_negative_slopes` 
-            in the DCNN model, defaults to 0.01
+        in the DCNN model, defaults to 0.01.
         :type flatten_leaky_relu_negative_slope: Union[List[float], float], optional
         :param flatten_hidden_widths: widths of hidden linear layers in the flatten layers,
-            defaults to None. When `flatten_hidden_widths` is None or an empty list,
-            there is no hidden layer.
+        defaults to None. When `flatten_hidden_widths` is None or an empty list,
+        there is no hidden layer.
         :type flatten_hidden_widths: Optional[List[int]], optional
         :param device: Model's device, defaults to gpu if available, otherwise cpu.
         :type device: Optional[torch.device], optional
-        :param dtype: Model's data type, defaults to `torch.float`
+        :param dtype: Model's data type, defaults to `torch.float`.
         :type dtype: Optional[torch.dtype], optional
         """        
         super(CNNJetImgEncoder, self).__init__()
@@ -94,7 +98,8 @@ class CNNJetImgEncoder(nn.Module):
             "cnn_groups": cnn_groups,
             "cnn_biases": cnn_biases,
             "cnn_padding_modes": cnn_padding_modes,
-            "cnn_leaky_relu_negative_slopes": cnn_leaky_relu_negative_slopes
+            "cnn_leaky_relu_negative_slopes": cnn_leaky_relu_negative_slopes,
+            "cnn_use_intermediates": cnn_use_intermediates
         }
         
         self.flatten_params = {
@@ -120,16 +125,29 @@ class CNNJetImgEncoder(nn.Module):
             padding_modes = self.cnn_params["cnn_padding_modes"],
             leaky_relu_negative_slopes = self.cnn_params["cnn_leaky_relu_negative_slopes"],
             device = self.device,
-            dtype = self.dtype
+            dtype = self.dtype,
+            keep_intermediates=cnn_use_intermediates
         )
         
         test_input = torch.rand(
             1, 1, input_height, input_width, 
             device=self.device, dtype=self.dtype
         )
-        test_output = self.dcnn(test_input)
+        if cnn_use_intermediates:
+            test_output, test_feature_maps = self.dcnn(test_input)
+            intermediate_entries = 0
+            for feature_map in test_feature_maps:
+                # to be concatenated
+                intermediate_dim = tuple(feature_map.shape[1:])
+                intermediate_entries += reduce(
+                    lambda x, y: x*y, 
+                    intermediate_dim
+                )
+        else:
+            test_output = self.dcnn(test_input)
+            intermediate_entries = 0
         self.dcnn_out_img_size = tuple(test_output.shape[1:])
-        output_num_entries = reduce(lambda x, y: x*y, self.dcnn_out_img_size)
+        output_num_entries = reduce(lambda x, y: x*y, self.dcnn_out_img_size) + intermediate_entries
         
         # flatten layer: 3d feature (2d image with multiple channels) -> 1d vector
         linear_layers = nn.ModuleList()
@@ -191,8 +209,12 @@ class CNNJetImgEncoder(nn.Module):
             
         # send to device and dtype
         jet_img = jet_img.to(self.device, self.dtype)
-        
-        return self.flatten(self.dcnn(jet_img))
+        if not self.cnn_params["cnn_use_intermediates"]:
+            return self.flatten(self.dcnn(jet_img))
+        else:
+            output, feature_maps = self.dcnn(jet_img)
+            output = output.flatten(start_dim=1)
+            return self.flatten(torch.cat([output, *feature_maps], dim=1))
     
     @property
     def num_learnable_parameters(self):

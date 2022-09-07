@@ -21,7 +21,8 @@ class DCNN(nn.Module):
         padding_modes: Union[List[str], str] = 'zeros',
         leaky_relu_negative_slopes: Union[List[float], float] = 0.01,
         device: Optional[torch.device] = DEFAULT_DEVICE,
-        dtype: Optional[torch.dtype] = DEFAULT_DTYPE
+        dtype: Optional[torch.dtype] = DEFAULT_DTYPE,
+        keep_intermediates: bool = False,
     ):
         """Deep Convolutional Neural Network (DCNN).
         For CNN specifications, see https://pytorch.org/docs/stable/generated/torch.conv.html.
@@ -30,31 +31,31 @@ class DCNN(nn.Module):
         :type input_channel: int
         :param output_channel: Number of channels produced by the network
         :type output_channel: int
-        :param hidden_channels: Number of channels produced in the hidden layer of the network,
-            no hidden layers if None or empty.
+        :param hidden_channels: Number of channels produced in the hidden layer of the network, 
+        no hidden layers if None or empty.
         :type hidden_channels: Optional[List[int]]
         :param kernel_sizes: Size or a list of sizes of the convolving kernel. 
-            Assumed to be homogeneous if int.
+        Assumed to be homogeneous if int.
         :type kernel_sizes: List[Union[int, Tuple[int]]]
         :param conv_transpose: If True, use ConvTranspose2d instead of Conv2d, defaults to False.
         :type conv_transpose: bool
         :param strides: Stride or or a list of strides of the convolution, defaults to 1. 
-            Assumed to be homogeneous if int.
+        Assumed to be homogeneous if int.
         :type strides: Union[List[int], int], optional
-        :param paddings: Padding or a list of paddings added to all four sides of the input, defaults to 0.
-            Assumed to be homogeneous if int,
+        :param paddings: Padding or a list of paddings added to all four sides of the input, 
+        defaults to 0. Assumed to be homogeneous if int,
         :type paddings: Union[List[int], int], optional
         :param dilations: Spacing or a list of spacings between kernel elements, defaults to 1.
         :type dilations: Union[List[int], int], optional
         :param groups: Number or a list of numbers of blocked connections 
-            from input channels to output channels, defaults to 1.
+        from input channels to output channels, defaults to 1.
         :type groups: Union[List[int], int], optional
         :param biases: If True, adds a learnable bias to the output, defaults to True
         :type biases: Union[List[bool], bool], optional
         :param padding_modes: Modes or a list of modes for padding, defaults to 'zeros'
         :type padding_modes: Union[List[str], str], optional
-        :param leaky_relu_negative_slopes: `negative_slope` or a list of `negative_slope`s of
-            the leaky_relu layers in the neural network.
+        :param leaky_relu_negative_slopes: `negative_slope` or a list of `negative_slope`s of 
+        the leaky_relu layers in the neural network.
         :type leaky_relu_negative_slopes: Union[List[float], float]
         :param device: Model's device, defaults to 'cuda' if available, otherwise 'cpu'
         :type device: Optional[torch.device], optional
@@ -151,6 +152,7 @@ class DCNN(nn.Module):
         self.device = device
         self.dtype = dtype
         self.conv_transpose = conv_transpose
+        self.keep_intermediates = keep_intermediates
 
         # neural networks
         # input -> output
@@ -277,4 +279,13 @@ class DCNN(nn.Module):
                 'Input tensor x must be 3 or 4 dimensional. '
                 f'Found: {x.dim()=}'
             )
-        return self.cnn(x)    
+        if not self.keep_intermediates:
+            return self.cnn(x)    
+        else:
+            intermediate_feature_maps = []
+            for layer in self.cnn:
+                x = layer(x)
+                intermediate_feature_maps.append(
+                    x.flatten(start_dim=1)
+                )
+            return x, intermediate_feature_maps

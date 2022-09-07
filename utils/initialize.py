@@ -28,6 +28,7 @@ def initialize_autoencoder(args: Namespace) -> Tuple[CNNJetImgEncoder, CNNJetImg
         cnn_biases=args.encoder_cnn_biases,
         cnn_padding_modes=args.encoder_cnn_padding_modes,
         cnn_leaky_relu_negative_slopes=args.encoder_cnn_leaky_relu_negative_slopes,
+        cnn_use_intermediates=args.encoder_cnn_use_intermediates,
         flatten_leaky_relu_negative_slope=args.encoder_flatten_leaky_relu_negative_slope,
         flatten_hidden_widths=args.encoder_flatten_hidden_widths,
         device=args.device,

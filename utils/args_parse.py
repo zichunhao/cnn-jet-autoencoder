@@ -187,6 +187,12 @@ def parse_model_settings(
         help='Negative slopes in the leaky relu layers '
         'of the DCNN network in the encoder.'
     )
+    parser.add_argument(
+        '--encoder-cnn-use-intermediates',
+        default=False, action='store_true',
+        help='Whether to use intermediate feature maps in the encoder CNN model. '
+        'If True, CNN intermediate feature maps are concatenated to the output before reducing dimension. '
+    )
     
     parser.add_argument(
         '--encoder-flatten-leaky-relu-negative-slope', 
