@@ -139,6 +139,10 @@ def parse_model_settings(
         type=int, metavar='',
         help='Size of the vector in the latent space.'
     )
+    parser.add_argument(
+        '--arxiv-model', '-a', action='store_true', default=False,
+        help="Whether to use the model from the arXiv paper [arXiv:1808.08992]."
+    )
     
     # encoder
     parser.add_argument(
