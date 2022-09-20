@@ -139,6 +139,10 @@ def parse_model_settings(
         type=int, metavar='',
         help='Size of the vector in the latent space.'
     )
+    parser.add_argument(
+        '--arxiv-model', '-a', action='store_true', default=False,
+        help="Whether to use the model from the arXiv paper [arXiv:1808.08992]."
+    )
     
     # encoder
     parser.add_argument(
@@ -186,6 +190,12 @@ def parse_model_settings(
         nargs="+", type=float, metavar='', default=[0.01],
         help='Negative slopes in the leaky relu layers '
         'of the DCNN network in the encoder.'
+    )
+    parser.add_argument(
+        '--encoder-cnn-use-intermediates',
+        default=False, action='store_true',
+        help='Whether to use intermediate feature maps in the encoder CNN model. '
+        'If True, CNN intermediate feature maps are concatenated to the output before reducing dimension. '
     )
     
     parser.add_argument(
