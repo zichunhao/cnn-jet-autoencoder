@@ -168,7 +168,8 @@ class CNNJetImgDecoder(nn.Module):
             padding_modes=self.cnn_params["cnn_padding_modes"],
             leaky_relu_negative_slopes=self.cnn_params["cnn_leaky_relu_negative_slopes"],
             device=self.device,
-            dtype=self.dtype
+            dtype=self.dtype,
+            keep_intermediates=False
         )
         
         # quick hack to know the output dimension of the DCNN
