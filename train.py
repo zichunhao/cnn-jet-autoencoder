@@ -65,6 +65,8 @@ def setup_argparse() -> argparse.Namespace:
     args = parser.parse_args()
     if args.patience < 0:
         args.patience = math.inf
+    if args.arxiv_model:
+        args.latent_vector_size = 6
     return args
 
 
