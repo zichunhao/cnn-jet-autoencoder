@@ -97,8 +97,13 @@ def initialize_dataloader(args: Namespace, test: bool=False) -> DataLoader:
     :type test: bool, optional
     :return: (train_loader, valid_loader) for train (`not test`) and test_loader if `test`
     :rtype: DataLoader
-    """    
-    jet_imgs = torch.load(args.data_path).to(device=args.device, dtype=args.dtype)
+    """
+    # load data
+    jet_imgs = []
+    for path in args.data_paths:
+        jet_imgs.append(torch.load(path).to(device=args.device, dtype=args.dtype))
+    jet_imgs = torch.cat(jet_imgs, dim=0)
+    
     shuffle = not test  # do not shuffle if testing
     if not test:  # training
         jet_imgs_train, jet_imgs_valid = train_test_split(

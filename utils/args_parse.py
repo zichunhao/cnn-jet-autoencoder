@@ -6,9 +6,9 @@ from .const import DEFAULT_DEVICE, DEFAULT_DTYPE
 
 def parse_data_settings(parser: argparse.ArgumentParser) -> argparse.Namespace:
     parser.add_argument(
-        '--data-path', '-dp',
-        type=str, metavar='',
-        help='Path to the training data (jet images).'
+        '--data-paths', '-dp',
+        nargs="+", type=str, metavar='',
+        help='Paths to the training data (jet images).'
     )
     parser.add_argument(
         '--normalize',
