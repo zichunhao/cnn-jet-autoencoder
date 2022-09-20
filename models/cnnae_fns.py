@@ -1,8 +1,16 @@
+from typing import Optional
 import torch
 from torch import nn
 
+from utils.const import DEFAULT_DEVICE, DEFAULT_DTYPE
+
 class CNNAEFNSEncoder(nn.Module):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(
+        self, 
+        device: Optional[torch.device] = DEFAULT_DEVICE,
+        dtype: Optional[torch.dtype] = DEFAULT_DTYPE,
+        *args, **kwargs
+    ) -> None:
         """
         CNNAE given in "Searching for new physics with deep autoencoders"
         by Farina, Nakai, and Shih (FNS) (arXiv:1808.08992, 2020).
@@ -31,7 +39,7 @@ class CNNAEFNSEncoder(nn.Module):
             nn.ReLU(),
             # layer = Dense(6)(layer)
             nn.Linear(32, 6)
-        )
+        ).to(device=device, dtype=dtype)
         
         self.__num_param = sum(p.nelement() for p in self.parameters() if p.requires_grad)
 
@@ -69,7 +77,12 @@ class CNNAEFNSEncoder(nn.Module):
         return sum(torch.pow(p, 2).sum() for p in self.parameters())
 
 class CNNAEFNSDecoder(nn.Module):
-    def __init__(self, *args, **kwargs):
+    def __init__(
+            self, 
+            device: Optional[torch.device] = DEFAULT_DEVICE,
+            dtype: Optional[torch.dtype] = DEFAULT_DTYPE, 
+            *args, **kwargs
+        ) -> None:
         super(CNNAEFNSDecoder, self).__init__()
         # encoded = layer
         self.decoder = nn.Sequential(
@@ -99,7 +112,7 @@ class CNNAEFNSDecoder(nn.Module):
             nn.Softmax(dim=-1),
             # decoded = Reshape((40, 40, 1))(layer)
             Reshape(-1, 1, 40, 40)
-        )
+        ).to(device=device, dtype=dtype)
         
         self.__num_param = sum(p.nelement() for p in self.parameters() if p.requires_grad)
         
