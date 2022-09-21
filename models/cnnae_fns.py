@@ -108,8 +108,8 @@ class CNNAEFNSDecoder(nn.Module):
             nn.Conv2d(128, 1, kernel_size=(3, 3), padding='same'),
             # layer = Reshape((1, 1600))(layer)
             Reshape(-1, 1, 1600),
-            # layer = Activation('softmax')(layer)
-            nn.Softmax(dim=-1),
+            # # layer = Activation('softmax')(layer)
+            # nn.Softmax(dim=-1),
             # decoded = Reshape((40, 40, 1))(layer)
             Reshape(-1, 1, 40, 40)
         ).to(device=device, dtype=dtype)
