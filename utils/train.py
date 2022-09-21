@@ -19,14 +19,14 @@ from .const import MODES, LOSS_BLOW_UP_THRESHOLD
 from .custom_mse_loss import CustomMSELoss
 from .misc import mkdir
 from .plot import plot_jet_imgs
-from models import CNNJetImgEncoder, CNNJetImgDecoder
+from models import CNNJetImgEncoder, CNNJetImgDecoder, CNNAEFNSEncoder, CNNAEFNSDecoder
 
 def train_loop(
     args: Namespace, 
     train_loader: DataLoader, 
     valid_loader: DataLoader,
-    encoder: CNNJetImgEncoder, 
-    decoder: CNNJetImgDecoder,
+    encoder: Union[CNNJetImgEncoder, CNNAEFNSEncoder], 
+    decoder: Union[CNNJetImgDecoder, CNNAEFNSDecoder],
     optimizer_encoder: Optimizer, 
     optimizer_decoder: Optimizer,
     lambda_nz: Union[float, int]
@@ -39,9 +39,9 @@ def train_loop(
     :param valid_loader: DataLoader for validation data
     :type valid_loader: torch.utils.data.DataLoader.
     :param encoder: Encoder model.
-    :type encoder: CNNJetImgEncoder
+    :type encoder: Union[CNNJetImgEncoder, CNNAEFNSEncoder]
     :param decoder: Decoder model.
-    :type decoder: CNNJetImgDecoder
+    :type decoder: Union[CNNJetImgDecoder, CNNAEFNSDecoder]
     :param optimizer_encoder: Optimizer for encoder.
     :type optimizer_encoder: torch.optim.Optimizer
     :param optimizer_decoder: Optimizer for decoder.
@@ -170,8 +170,8 @@ def train_loop(
 def train(
     args: Namespace, 
     loader: DataLoader, 
-    encoder: CNNJetImgEncoder, 
-    decoder: CNNJetImgDecoder, 
+    encoder: Union[CNNJetImgEncoder, CNNAEFNSEncoder], 
+    decoder: Union[CNNJetImgDecoder, CNNAEFNSDecoder],
     optimizer_encoder: Optimizer, 
     optimizer_decoder: Optimizer,
     criterion: nn.Module,
@@ -183,9 +183,9 @@ def train(
     `(optimizer_encoder, optimizer_decoder)`.
 
     :param encoder: Encoder.
-    :type encoder: CNNJetImgEncoder
+    :type encoder: Union[CNNJetImgEncoder, CNNAEFNSEncoder]
     :param decoder: Decoder.
-    :type decoder: CNNJetImgDecoder
+    :type decoder: Union[CNNJetImgDecoder, CNNAEFNSDecoder]
     :param optimizer_encoder: Optimizer for `encoder`.
     :type optimizer_encoder: Optimizer
     :param optimizer_decoder: Optimizer for `decoder`.
@@ -207,8 +207,8 @@ def train(
 def validate(
     args: Namespace, 
     loader: DataLoader, 
-    encoder: CNNJetImgEncoder, 
-    decoder: CNNJetImgDecoder, 
+    encoder: Union[CNNJetImgEncoder, CNNAEFNSEncoder], 
+    decoder: Union[CNNJetImgDecoder, CNNAEFNSDecoder], 
     criterion: nn.Module,
     epoch: int, 
     save_path: str
@@ -217,9 +217,9 @@ def validate(
     using the data in `loader`
 
     :param encoder: Encoder.
-    :type encoder: CNNJetImgEncoder
+    :type encoder: Union[CNNJetImgEncoder, CNNAEFNSEncoder]
     :param decoder: Decoder.
-    :type decoder: CNNJetImgDecoder
+    :type decoder: Union[CNNJetImgDecoder, CNNAEFNSDecoder]
     :param epoch: Current epoch, used for logging and plotting.
     :type epoch: int
     :param save_path: Path to save the results.
@@ -237,8 +237,8 @@ def validate(
 def test(
     args: Namespace, 
     loader: DataLoader, 
-    encoder: CNNJetImgEncoder, 
-    decoder: CNNJetImgDecoder, 
+    encoder: Union[CNNJetImgEncoder, CNNAEFNSEncoder], 
+    decoder: Union[CNNJetImgDecoder, CNNAEFNSDecoder],
     epoch: int, 
     save_path: str, 
     criterion: nn.Module
@@ -246,9 +246,9 @@ def test(
     """Function for test/inference.
 
     :param encoder: Encoder.
-    :type encoder: CNNJetImgEncoder
+    :type encoder: Union[CNNJetImgEncoder, CNNAEFNSEncoder]
     :param decoder: Decoder.
-    :type decoder: CNNJetImgDecoder
+    :type decoder: Union[CNNJetImgDecoder, CNNAEFNSDecoder]
     :param epoch: Current epoch, used for logging and plotting.
     :type epoch: int
     :param save_path: Path to save the results.
@@ -267,8 +267,8 @@ __ALL__ = [train_loop, train, validate, test]
 def _train_valid_test(
     args: Namespace,
     loader: DataLoader,
-    encoder: CNNJetImgEncoder,
-    decoder: CNNJetImgDecoder,
+    encoder: Union[CNNJetImgEncoder, CNNAEFNSEncoder],
+    decoder: Union[CNNJetImgDecoder, CNNAEFNSDecoder],
     mode: str,
     optimizer_encoder: Optimizer,
     optimizer_decoder: Optimizer,
@@ -284,9 +284,9 @@ def _train_valid_test(
     :param loader: Dataloader for training/testing data.
     :type loader: DataLoader
     :param encoder: Encoder.
-    :type encoder: CNNJetImgEncoder
+    :type encoder: Union[CNNJetImgEncoder, CNNAEFNSEncoder]
     :param decoder: Decoder.
-    :type decoder: CNNJetImgDecoder
+    :type decoder: Union[CNNJetImgDecoder, CNNAEFNSDecoder]
     :param mode: String that specifies the mode.
         - train: for training (back prop enabled)
         - valid&test: for validation (back prop disabled)
