@@ -134,6 +134,7 @@ def train_loop(
                     maxR=args.maxR, 
                     save_path=paths_jet_plots[mode],
                     epoch=curr_ep,
+                    cutoff=args.plot_cutoff
                 )
             
             # save results for monitoring along the way

@@ -313,9 +313,10 @@ def parse_plot_settings(
     )
     parser.add_argument(
         '--plot-cutoff',
-        type=float, metavar='', default=None,
-        help="The value below which the entries will be ignored. "
-        "Disabled if None or non-positive, defaults to None."
+        default=False, action='store_true',
+        help="Whether to filter out entries of reconstructed image that "
+        "are below a threshold given by the lowest nonzero value "
+        "in the original image."
     )
     return parser
 

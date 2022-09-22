@@ -1,4 +1,5 @@
 from copy import copy
+import math
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
 from os import path as osp
@@ -15,7 +16,7 @@ def plot_jet_imgs(
     save_path: Optional[str] = None,
     epoch: Optional[int] = None,
     show: bool = False,
-    cutoff: Optional[float] = None
+    cutoff: bool = True
 ) -> None:
     """Plot a comparison of the target and reconstructed images.
     There will be 2 images per row, (target, reconstructed).
@@ -42,9 +43,9 @@ def plot_jet_imgs(
     :type epoch: Optional[int], optional
     :param show: Whether to show the image, defaults to False.
     :type show: bool, optional
-    :param cutoff: The value below which the entries will be ignored.
-        Disabled if None or non-positive, defaults to None.
-    :type cutoff: Optional[float], optional
+    :param cutoff: Whether the entries of reconstructed image will be masked 
+    if they are below the minimum value of the target image, defaults to False.
+    :type cutoff: bool, optional
     :raises RuntimeError: If `imgs_recons` and `img_target` 
     do not have the same number of jet images.
     """    
@@ -67,10 +68,15 @@ def plot_jet_imgs(
     avg_img_target = torch.mean(imgs_target, dim=0)
     avg_img_recons = torch.mean(imgs_recons, dim=0)
     
-    if (cutoff is not None) and (cutoff > 0):
-        imgs_target = imgs_target[imgs_target > cutoff]
-        imgs_recons = imgs_recons[imgs_recons > cutoff]
-    
+    if cutoff:
+        # the largest order of magnitude smaller than the minimum value of the target image
+        cutoff_value = 10 ** math.ceil(math.log(
+            (imgs_target[imgs_target > 0]).min().item(), # find the minimum nonzero value
+            10
+        ))
+        mask = (imgs_recons > cutoff_value)
+        imgs_recons = imgs_recons * mask
+        
     # return to numpy
     imgs_target = imgs_target.cpu().numpy()
     imgs_recons = imgs_recons.cpu().numpy()
@@ -123,7 +129,7 @@ def plot_jet_imgs(
             origin='lower',
             cmap=cm,
             interpolation='nearest',
-            vmin=vmin,
+            vmin=cutoff_value if cutoff else vmin,
             extent=[-maxR, maxR, -maxR, maxR],
             vmax=vmax
         )
@@ -134,7 +140,7 @@ def plot_jet_imgs(
             origin='lower',
             cmap=cm,
             interpolation='nearest',
-            vmin=vmin,
+            vmin=cutoff_value if cutoff else vmin,
             extent=[-maxR, maxR, -maxR, maxR],
             vmax=vmax
         )
