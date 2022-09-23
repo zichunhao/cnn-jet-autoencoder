@@ -139,10 +139,17 @@ class CNNAEFNSDecoder(nn.Module):
         return sum(torch.pow(p, 2).sum() for p in self.parameters())
 
 
-class Reshape(nn.Module):
+class Reshape(nn.Module):  
     def __init__(self, *args) -> None:
+        """Reshape module to be compatible with torch.nn.Sequential. 
+        Initialized with the same arguments as torch.reshape.
+        """        
         super(Reshape, self).__init__()
         self.shape = args
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return x.reshape(self.shape)
+    
+    def __repr__(self) -> str:
+        # ignore batch dimension
+        return f'Reshape{self.shape[1:]}' 
