@@ -143,6 +143,10 @@ def parse_model_settings(
         '--arxiv-model', '-a', action='store_true', default=False,
         help="Whether to use the model from the arXiv paper [arXiv:1808.08992]."
     )
+    parser.add_argument(
+        '--arxiv-model-batch-norm', action='store_true', default=False,
+        help="Whether to use batch norm in the arXiv model."
+    )
     
     # encoder
     parser.add_argument(

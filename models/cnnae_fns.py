@@ -7,6 +7,7 @@ from utils.const import DEFAULT_DEVICE, DEFAULT_DTYPE
 class CNNAEFNSEncoder(nn.Module):
     def __init__(
         self, 
+        batch_norm: bool = True,
         device: Optional[torch.device] = DEFAULT_DEVICE,
         dtype: Optional[torch.dtype] = DEFAULT_DTYPE,
         *args, **kwargs
@@ -26,11 +27,13 @@ class CNNAEFNSEncoder(nn.Module):
             nn.MaxPool2d(kernel_size=(2, 2)),
             # layer = Conv2D(128, kernel_size=(3, 3), activation='relu',padding='same')(layer)
             nn.Conv2d(128, 128, kernel_size=(3, 3), padding='same'),
+            nn.BatchNorm2d(128) if batch_norm else nn.Identity(),
             nn.ReLU(),
             # layer = MaxPooling2D(pool_size=(2, 2),padding='same')(layer)
             nn.MaxPool2d(kernel_size=(2, 2)),
             # layer = Conv2D(128, kernel_size=(3, 3), activation='relu', padding='same')(layer)
             nn.Conv2d(128, 128, kernel_size=(3, 3), padding='same'),
+            nn.BatchNorm2d(128) if batch_norm else nn.Identity(),
             nn.ReLU(),
             # layer = Flatten()(layer)
             nn.Flatten(start_dim=1),
@@ -79,6 +82,7 @@ class CNNAEFNSEncoder(nn.Module):
 class CNNAEFNSDecoder(nn.Module):
     def __init__(
             self, 
+            batch_norm: bool = True,
             device: Optional[torch.device] = DEFAULT_DEVICE,
             dtype: Optional[torch.dtype] = DEFAULT_DTYPE, 
             *args, **kwargs
@@ -96,16 +100,20 @@ class CNNAEFNSDecoder(nn.Module):
             Reshape(-1, 128, 10, 10),
             # layer = Conv2D(128, kernel_size=(3, 3), activation='relu', padding='same')(layer)
             nn.Conv2d(128, 128, kernel_size=(3, 3), padding='same'),
+            nn.BatchNorm2d(128) if batch_norm else nn.Identity(),
             nn.ReLU(),
             # layer = UpSampling2D((2, 2))(layer)
             nn.Upsample((20, 20)),  # layer.shape: (batch_size, 128, 10, 10)
             # layer = Conv2D(128, kernel_size=(3, 3), activation='relu', padding='same')(layer)
             nn.Conv2d(128, 128, kernel_size=(3, 3), padding='same'),
+            nn.BatchNorm2d(128) if batch_norm else nn.Identity(),
             nn.ReLU(),
             # layer = UpSampling2D((2, 2))(layer)
             nn.Upsample((40, 40)),  # layer.shape: (batch_size, 128, 20, 20)
             # layer = Conv2D(1, kernel_size=(3, 3), padding='same')(layer)
             nn.Conv2d(128, 1, kernel_size=(3, 3), padding='same'),
+            nn.BatchNorm2d(1) if batch_norm else nn.Identity(),
+            nn.ReLU(),
             # layer = Reshape((1, 1600))(layer)
             Reshape(-1, 1, 1600),
             # # layer = Activation('softmax')(layer)
@@ -137,7 +145,6 @@ class CNNAEFNSDecoder(nn.Module):
     def l2_norm(self):
         """L2 norm of the model parameters."""
         return sum(torch.pow(p, 2).sum() for p in self.parameters())
-
 
 class Reshape(nn.Module):  
     def __init__(self, *args) -> None:

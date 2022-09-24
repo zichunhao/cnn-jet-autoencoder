@@ -20,9 +20,16 @@ def initialize_autoencoder(
     """Initialize the encoder and decoder."""
     if args.arxiv_model:
         # arXiv:1808.08992
-        return CNNAEFNSEncoder(), CNNAEFNSDecoder()
+        encoder = CNNAEFNSEncoder(
+            batch_norm=args.arxiv_model_batch_norm, 
+            device=args.device, dtype=args.dtype
+        )
+        decoder = CNNAEFNSDecoder(
+            batch_norm=args.arxiv_model_batch_norm, 
+            device=args.device, dtype=args.dtype
+        )
+        return encoder, decoder
     else:
-        
         encoder = CNNJetImgEncoder(
             input_height=args.img_height,
             input_width=args.img_width,
@@ -39,8 +46,7 @@ def initialize_autoencoder(
             cnn_use_intermediates=args.encoder_cnn_use_intermediates,
             flatten_leaky_relu_negative_slope=args.encoder_flatten_leaky_relu_negative_slope,
             flatten_hidden_widths=args.encoder_flatten_hidden_widths,
-            device=args.device,
-            dtype=args.dtype
+            device=args.device, dtype=args.dtype
         )
         decoder = CNNJetImgDecoder(
             latent_vector_size=args.latent_vector_size,
@@ -59,8 +65,7 @@ def initialize_autoencoder(
             cnn_padding_modes=args.decoder_cnn_padding_modes,
             cnn_leaky_relu_negative_slopes=args.decoder_cnn_leaky_relu_negative_slopes,
             output_leaky_relu_negative_slope=args.decoder_output_leaky_relu_negative_slope,
-            device=args.device,
-            dtype=args.dtype
+            device=args.device, dtype=args.dtype
         )
         return encoder, decoder
 
