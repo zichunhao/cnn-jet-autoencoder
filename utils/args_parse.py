@@ -93,8 +93,9 @@ def parse_training_settings(
     )
     parser.add_argument(
         '--load-epoch',
-        type=int, default=1, metavar='',
-        help='Epoch number of the trained model to load.'
+        type=int, default=-1, metavar='',
+        help='Epoch number of the trained model to load. '
+        'When set to -1, load the best epoch.'
     )
     
     # training

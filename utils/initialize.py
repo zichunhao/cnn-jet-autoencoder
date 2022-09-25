@@ -1,4 +1,6 @@
 
+import logging
+from pathlib import Path
 from models import CNNJetImgEncoder, CNNJetImgDecoder, CNNAEFNSEncoder, CNNAEFNSDecoder
 from argparse import Namespace
 from typing import Tuple, Union
@@ -14,7 +16,8 @@ sys.path.insert(0, '../')
 
 
 def initialize_autoencoder(
-    args: Namespace
+    args: Namespace,
+    load_weights: bool = False
 ) -> Union[Tuple[CNNJetImgEncoder, CNNJetImgDecoder],
            Tuple[CNNAEFNSEncoder, CNNAEFNSDecoder]]:
     """Initialize the encoder and decoder."""
@@ -27,8 +30,7 @@ def initialize_autoencoder(
         decoder = CNNAEFNSDecoder(
             batch_norm=args.arxiv_model_batch_norm, 
             device=args.device, dtype=args.dtype
-        )
-        return encoder, decoder
+        )     
     else:
         encoder = CNNJetImgEncoder(
             input_height=args.img_height,
@@ -67,7 +69,25 @@ def initialize_autoencoder(
             output_leaky_relu_negative_slope=args.decoder_output_leaky_relu_negative_slope,
             device=args.device, dtype=args.dtype
         )
-        return encoder, decoder
+
+    if load_weights:
+        path = Path(args.load_weight_path)
+        path_encoder = path / 'weights_encoder'
+        path_decoder = path / 'weights_decoder'
+        if args.load_epoch <= 0:
+            # load the best epoch
+            path_encoder = path_encoder / 'best_weights_encoder.pt'
+            path_decoder = path_decoder / 'best_weights_decoder.pt'
+        else:
+            path_encoder = path_encoder / f'epoch_{args.load_epoch}_encoder_weights.pt'
+            path_decoder = path_decoder / f'epoch_{args.load_epoch}_decoder_weights.pt'
+        encoder.load_state_dict(torch.load(path_encoder))
+        logging.info(f'Encoder weights loaded from {path_encoder}.')
+        decoder.load_state_dict(torch.load(path_decoder))
+        logging.info(f'Decoder weights loaded from {path_decoder}.')
+    
+    return encoder, decoder
+        
 
 
 def initialize_optimizers(

@@ -23,7 +23,7 @@ def main(args: argparse.Namespace):
     loader_train, loader_valid = initialize_dataloader(args, test=False)
     
     logging.info('Initialize models')
-    encoder, decoder = initialize_autoencoder(args)
+    encoder, decoder = initialize_autoencoder(args, load_weights=args.load_to_train)
     logging.info(f'{encoder=}')
     logging.info(f'{decoder=}')
     logging.info(f'{encoder.num_learnable_parameters=}')

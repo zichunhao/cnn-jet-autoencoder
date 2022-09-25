@@ -51,11 +51,28 @@ def train_loop(
     :return: Best epoch number.
     :rtype: int
     """
+    path = mkdir(args.save_path)  # make dir and return path
+    
+    # best epoch info
     best_epoch = args.load_epoch if args.load_to_train else 1
     best_loss = math.inf
+    try:
+        # check if the model is trained
+        best_epoch_info = torch.load(osp.join(path, 'best_epoch_info.pt'))
+        best_epoch = best_epoch_info['epoch']
+    except FileNotFoundError:
+        best_epoch_info = {
+            'epoch': best_epoch,
+            'loss': best_loss,
+        }
+    
+    # epoch to start training
+    if not args.load_to_train:
+        start_epoch = 1
+    else:
+        start_epoch = args.load_epoch if (args.load_epoch >= 1) else best_epoch
+        
     num_stale_epochs = 0
-    path = mkdir(args.save_path)  # make dir and return path
-    start_epoch = 1 if not args.load_to_train else args.load_epoch
     
     losses_train = []
     losses_valid = []
@@ -102,7 +119,11 @@ def train_loop(
         if (abs(loss_valid) < best_loss):
             best_loss = loss_valid
             num_stale_epochs = 0
-            best_epoch = ep + 1
+            best_epoch = curr_ep
+            best_epoch_info = {
+                'epoch': best_epoch,
+                'loss': best_loss,
+            }
             torch.save(
                 encoder.state_dict(), 
                 osp.join(path, "weights_encoder/best_weights_encoder.pt")
@@ -111,6 +132,10 @@ def train_loop(
                 decoder.state_dict(), 
                 osp.join(path, "weights_decoder/best_weights_decoder.pt")
             )
+            torch.save(
+                best_epoch_info,
+                osp.join(path, "best_epoch_info.pt")
+            )
         else:
             num_stale_epochs += 1
         
@@ -118,7 +143,7 @@ def train_loop(
         if args.plot_freq > 0:
             if (curr_ep >= args.plot_start_epoch):
                 # start plotting after args.plot_start_epoch
-                plot_epoch = ((ep + 1) % args.plot_freq == 0) or (num_stale_epochs == 0)
+                plot_epoch = (ep % args.plot_freq == 0) or (num_stale_epochs == 0)
             else:
                 plot_epoch = False
         
