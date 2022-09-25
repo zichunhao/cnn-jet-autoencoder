@@ -15,6 +15,7 @@ def plot_jet_imgs(
     vmin: bool = 1e-8,
     save_path: Optional[str] = None,
     epoch: Optional[int] = None,
+    file_label: Optional[str] = None,
     show: bool = False,
     cutoff: bool = True
 ) -> None:
@@ -41,6 +42,8 @@ def plot_jet_imgs(
     :param epoch: Current epoch, defaults to None. 
     If None, epoch will not be noted in the figure name.
     :type epoch: Optional[int], optional
+    :param file_label: Label for the figure name, defaults to None.
+    :type file_label: str, optional
     :param show: Whether to show the image, defaults to False.
     :type show: bool, optional
     :param cutoff: Whether the entries of reconstructed image will be masked 
@@ -157,6 +160,8 @@ def plot_jet_imgs(
         fig_name = 'jet_images'
         if epoch is not None:
             fig_name += f'_epoch_{epoch}'
+        if (file_label is not None) and (len(file_label) > 0):
+            fig_name += f'_{file_label}'
         fig_name += '.pdf'
         fig.savefig(osp.join(save_path, fig_name))
     if show:

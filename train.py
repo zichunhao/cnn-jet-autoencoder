@@ -16,6 +16,8 @@ import math
 import logging
 import argparse
 
+from utils import ARXIV_MODEL_LATENT_VECTOR_SIZE
+
 def main(args: argparse.Namespace):
     logging.info(f'{args=}')
     
@@ -66,7 +68,7 @@ def setup_argparse() -> argparse.Namespace:
     if args.patience < 0:
         args.patience = math.inf
     if args.arxiv_model:
-        args.latent_vector_size = 6
+        args.latent_vector_size = ARXIV_MODEL_LATENT_VECTOR_SIZE
     return args
 
 

@@ -1,3 +1,4 @@
+from .analmoly_detection import *
 from .args_parse import *
 from .const import *
 from .custom_mse_loss import *

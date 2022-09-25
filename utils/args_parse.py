@@ -11,6 +11,11 @@ def parse_data_settings(parser: argparse.ArgumentParser) -> argparse.Namespace:
         help='Paths to the training data (jet images).'
     )
     parser.add_argument(
+        '--data-label',
+        type=str, metavar='',
+        help='Label of the data.'
+    )
+    parser.add_argument(
         '--normalize',
         default=False, action='store_true',
         help='Whether to normalize the jet images.'
@@ -47,17 +52,6 @@ def parse_training_settings(
         type=float, default=1e3, metavar='',
         help='Weights MSELoss of pixels that are supposed to be zero. '
         '(according to the target image).'
-    )
-    
-    # training-validation split
-    parser.add_argument(
-        '--test-size',
-        type=float, default=0.35, metavar='',
-        help='If float, should be between 0.0 and 1.0 '
-        'and represent the proportion of the dataset '
-        'to include in the test split. '
-        'If int, represents the absolute number of test samples. '
-        'Reference: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html.'
     )
     
     # device and dtype
@@ -110,6 +104,32 @@ def parse_training_settings(
             '--patience', '-p',
             type=get_patience, default=-1, metavar='',
             help='Patience for early stopping. Use -1 for no early stopping.'
+        )
+        # training-validation split
+        parser.add_argument(
+            '--test-size',
+            type=float, default=0.35, metavar='',
+            help='If float, should be between 0.0 and 1.0 '
+            'and represent the proportion of the dataset '
+            'to include in the test split. '
+            'If int, represents the absolute number of test samples. '
+            'Reference: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html.'
+        )
+    else:
+        parser.add_argument(
+            '--anomaly-detection',
+            default=False, action='store_true',
+            help='Whether to perform anomaly detection on the test set. '
+        )
+        parser.add_argument(
+            '--signal-paths',
+            nargs="+", type=str, metavar='',
+            help='Paths to the signal data (jet images).'
+        )
+        parser.add_argument(
+            '--signal-labels',
+            nargs="+", type=str, metavar='',
+            help='Labels of the signal data.'
         )
         
     # saving

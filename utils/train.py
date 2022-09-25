@@ -96,14 +96,14 @@ def train_loop(
         
         # training
         start = time.time()
-        imgs_target_train, imgs_recons_train, latent_spaces_train, loss_train = train(
+        imgs_target_train, imgs_recons_train, latent_spaces_train, _, loss_train = train(
             args, train_loader, encoder, decoder, 
             optimizer_encoder, optimizer_decoder, 
             criterion, curr_ep, args.save_path
         )
         
         # validation
-        imgs_target_valid, imgs_recons_valid, latent_spaces_valid, loss_valid = validate(
+        imgs_target_valid, imgs_recons_valid, latent_spaces_valid, _, loss_valid = validate(
             args, valid_loader, encoder, decoder, 
             criterion, curr_ep, args.save_path
         )
@@ -158,6 +158,7 @@ def train_loop(
                     num_imgs=args.num_jet_imgs, 
                     maxR=args.maxR, 
                     save_path=paths_jet_plots[mode],
+                    file_label=args.data_label,
                     epoch=curr_ep,
                     cutoff=args.plot_cutoff
                 )
@@ -348,6 +349,7 @@ def _train_valid_test(
     # initializations for return and saving
     imgs_target = []
     imgs_recons = []
+    norm_factors = []
     latent_spaces = []
     epoch_total_loss = 0
 
@@ -412,12 +414,14 @@ def _train_valid_test(
         img_recons = (img_recons * norm_factor).detach().cpu()
         imgs_target.append(img_target)
         imgs_recons.append(img_recons)
+        norm_factors.append(norm_factor.detach().cpu())
         latent_spaces.append(latent_vec.detach().cpu())
 
     # loop ends
     # prepare for return
     imgs_target = torch.cat(imgs_target, dim=0)
     imgs_recons = torch.cat(imgs_recons, dim=0)
+    norm_factors = torch.cat(norm_factors, dim=0)
     latent_spaces = torch.cat(latent_spaces, dim=0)
     epoch_avg_loss = epoch_total_loss / len(loader)
 
@@ -425,10 +429,5 @@ def _train_valid_test(
     if mode == 'train':
         torch.save(encoder.state_dict(), osp.join(encoder_weight_path, f"epoch_{epoch}_encoder_weights.pt"))
         torch.save(decoder.state_dict(), osp.join(decoder_weight_path, f"epoch_{epoch}_decoder_weights.pt"))
-    elif mode == 'test':
-        test_dir = mkdir(osp.join(save_path, 'test'))
-        torch.save(imgs_target, osp.join(test_dir, 'imgs_target.pt'))
-        torch.save(imgs_recons, osp.join(test_dir, 'imgs_recons.pt'))
-        torch.save(latent_spaces, osp.join(test_dir, 'latent_spaces.pt'))
 
-    return imgs_target, imgs_recons, latent_spaces, epoch_avg_loss
+    return imgs_target, imgs_recons, latent_spaces, norm_factors, epoch_avg_loss

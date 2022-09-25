@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 from models import CNNJetImgEncoder, CNNJetImgDecoder, CNNAEFNSEncoder, CNNAEFNSDecoder
 from argparse import Namespace
-from typing import Tuple, Union
+from typing import List, Tuple, Union
 from torch.optim import Optimizer
 import torch
 from torch.utils.data import DataLoader
@@ -114,18 +114,27 @@ def initialize_optimizers(
     return optimizer_encoder, optimizer_decoder
 
 
-def initialize_dataloader(args: Namespace, test: bool=False) -> DataLoader:
+def initialize_dataloader(
+    args: Namespace,
+    paths: Union[List[Path], List[str]] = None, 
+    test: bool=False
+) -> DataLoader:
     """Initialize the dataloader for training
 
     :param test: Whether the data is for testing/inference purpose, defaults to False
         If True, data will not be shuffled.
     :type test: bool, optional
+    :param paths: Paths to the data files, defaults to None. 
+    If None, the paths will be provided by --data-paths in args.
+    :type paths: List of str or Path, optional
     :return: (train_loader, valid_loader) for train (`not test`) and test_loader if `test`
     :rtype: DataLoader
     """
     # load data
     jet_imgs = []
-    for path in args.data_paths:
+    if paths is None:
+        paths = args.data_paths
+    for path in paths:
         jet_imgs.append(torch.load(path).to(device=args.device, dtype=args.dtype))
     jet_imgs = torch.cat(jet_imgs, dim=0)
     
