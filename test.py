@@ -17,7 +17,7 @@ import math
 import logging
 import argparse
 
-from utils.const import ARXIV_MODEL_LATENT_VECTOR_SIZE
+from utils import ARXIV_MODEL_LATENT_VECTOR_SIZE, get_eps
 
 
 def main(args: argparse.Namespace):
@@ -71,7 +71,7 @@ def main(args: argparse.Namespace):
     
     # anomaly detection
     if (args.anomaly_detection) and (len(args.signal_paths) > 0):
-        eps = 1e-12
+        eps = get_eps(args)
         logging.info('Anomaly detection')
         path_ad = path_test / "anomaly_detection"
         path_ad.mkdir(parents=True, exist_ok=True)
