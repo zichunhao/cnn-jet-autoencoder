@@ -22,6 +22,7 @@ class CNNAEFNSEncoder(nn.Module):
         self.encoder = nn.Sequential(
             # layer = Conv2D(128, kernel_size=(3, 3), activation='relu', padding='same')(layer)
             nn.Conv2d(1, 128, kernel_size=(3, 3), padding='same'),
+            nn.BatchNorm2d(128) if batch_norm else nn.Identity(),
             nn.ReLU(),
             # layer = MaxPooling2D(pool_size=(2, 2),padding='same')(layer)
             nn.MaxPool2d(kernel_size=(2, 2)),
