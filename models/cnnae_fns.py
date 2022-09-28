@@ -7,7 +7,7 @@ from utils.const import DEFAULT_DEVICE, DEFAULT_DTYPE
 class CNNAEFNSEncoder(nn.Module):
     def __init__(
         self, 
-        batch_norm: bool = True,
+        batch_norm: bool = False,
         device: Optional[torch.device] = DEFAULT_DEVICE,
         dtype: Optional[torch.dtype] = DEFAULT_DTYPE,
         *args, **kwargs
@@ -83,7 +83,8 @@ class CNNAEFNSEncoder(nn.Module):
 class CNNAEFNSDecoder(nn.Module):
     def __init__(
             self, 
-            batch_norm: bool = True,
+            batch_norm: bool = False,
+            normalize: bool = False,
             device: Optional[torch.device] = DEFAULT_DEVICE,
             dtype: Optional[torch.dtype] = DEFAULT_DTYPE, 
             *args, **kwargs
@@ -120,6 +121,7 @@ class CNNAEFNSDecoder(nn.Module):
             # # layer = Activation('softmax')(layer)
             # nn.Softmax(dim=-1),
             # decoded = Reshape((40, 40, 1))(layer)
+            nn.Sigmoid() if normalize else nn.Identity(),
             Reshape(-1, 1, 40, 40)
         ).to(device=device, dtype=dtype)
         
