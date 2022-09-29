@@ -92,9 +92,13 @@ def plot_jet_imgs(
     fig, axs = plt.subplots(num_rows, 2, figsize=(7.5, 3*num_rows))
     
     # average jet image
+    vmin_lognorm = min(
+        10**math.ceil(math.log(avg_img_target[avg_img_target > 0].min(), 10)),
+        10**math.ceil(math.log(avg_img_recons[avg_img_recons > 0].min(), 10)),
+    )
     fig_target = axs[0][0].imshow(
         avg_img_target,
-        norm=LogNorm(vmin=vmin, vmax=1),
+        norm=LogNorm(vmin=vmin_lognorm, vmax=1),
         origin='lower',
         cmap=cm,
         interpolation='nearest',
@@ -104,7 +108,7 @@ def plot_jet_imgs(
 
     _ = axs[0][1].imshow(
         avg_img_recons,
-        norm=LogNorm(vmin=vmin, vmax=1),
+        norm=LogNorm(vmin=vmin_lognorm, vmax=1),
         origin='lower',
         cmap=cm,
         interpolation='nearest',
@@ -121,8 +125,10 @@ def plot_jet_imgs(
         img_target = imgs_target[i]
         img_recons = imgs_recons[i]
 
-        vmax = max(np.abs(img_target).max(), 
-                   np.abs(img_recons).max())
+        vmax = max(
+            np.abs(img_target).max(), 
+            np.abs(img_recons).max()
+        )
 
         fig_target = axs_row[0].imshow(
             img_target,
