@@ -12,7 +12,6 @@ def plot_jet_imgs(
     imgs_recons: Union[torch.Tensor, List[torch.Tensor]],
     num_imgs: int = 10,
     maxR: float = 0.6,
-    vmin: bool = 1e-8,
     save_path: Optional[str] = None,
     epoch: Optional[int] = None,
     file_label: Optional[str] = None,
@@ -33,9 +32,6 @@ def plot_jet_imgs(
     :type num_imgs: int, optional
     :param maxR: Maximum :math:`\Delta R` of the jet image, defaults to 0.6.
     :type maxR: float, optional
-    :param vmin: vmin for the jet images,
-    defaults to 1e-8
-    :type vmin: bool, optional
     :param save_path: Path to save the plot, defaults to None. 
     If None, the plot will not be saved.
     :type save_path: Optional[str], optional
@@ -71,13 +67,14 @@ def plot_jet_imgs(
     avg_img_target = torch.mean(imgs_target, dim=0)
     avg_img_recons = torch.mean(imgs_recons, dim=0)
     
+    vmin = 10 ** math.ceil(math.log(
+        (imgs_target[imgs_target > 0]).min().item(), # find the minimum nonzero value
+        10
+    ))
     if cutoff:
         # the largest order of magnitude smaller than the minimum value of the target image
-        cutoff_value = 10 ** math.ceil(math.log(
-            (imgs_target[imgs_target > 0]).min().item(), # find the minimum nonzero value
-            10
-        ))
-        mask = (imgs_recons > cutoff_value)
+        
+        mask = (imgs_recons > vmin)
         imgs_recons = imgs_recons * mask
         
     # return to numpy
@@ -132,7 +129,7 @@ def plot_jet_imgs(
             origin='lower',
             cmap=cm,
             interpolation='nearest',
-            vmin=cutoff_value if cutoff else vmin,
+            vmin=vmin,
             extent=[-maxR, maxR, -maxR, maxR],
             vmax=vmax
         )
@@ -143,7 +140,7 @@ def plot_jet_imgs(
             origin='lower',
             cmap=cm,
             interpolation='nearest',
-            vmin=cutoff_value if cutoff else vmin,
+            vmin=vmin,
             extent=[-maxR, maxR, -maxR, maxR],
             vmax=vmax
         )
