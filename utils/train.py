@@ -375,7 +375,7 @@ def _train_valid_test(
             # save input and output
             torch.save(img_target.detach().cpu(), osp.join(error_path, 'img_target.pt'))
             torch.save(img_recons.detach().cpu(), osp.join(error_path, 'img_recons.pt'))
-            torch.save(latent_spaces.detach().cpu(), osp.join(error_path, 'latent.pt'))
+            torch.save(latent_vec.detach().cpu(), osp.join(error_path, 'latent.pt'))
             if args.normalize:
                 torch.save(norm_factor, osp.join(error_path, 'norm_factor.pt'))
             # save weights
@@ -398,7 +398,8 @@ def _train_valid_test(
                 # save input and output
                 torch.save(img_target.detach().cpu(), osp.join(error_path, 'img_target.pt'))
                 torch.save(img_recons.detach().cpu(), osp.join(error_path, 'img_recons.pt'))
-                torch.save(latent_spaces.detach().cpu(), osp.join(error_path, 'latent.pt'))
+                torch.save(latent_vec.detach().cpu(),
+                           osp.join(error_path, 'latent.pt'))
                 if args.normalize:
                     torch.save(norm_factor, osp.join(error_path, 'norm_factor.pt'))
                 # save weights
