@@ -121,7 +121,7 @@ class CNNAEFNSDecoder(nn.Module):
             # # layer = Activation('softmax')(layer)
             # nn.Softmax(dim=-1),
             # decoded = Reshape((40, 40, 1))(layer)
-            nn.Sigmoid() if normalize else nn.Identity(),
+            nn.Tanh() if normalize else nn.Identity(),
             Reshape(-1, 1, 40, 40)
         ).to(device=device, dtype=dtype)
         
