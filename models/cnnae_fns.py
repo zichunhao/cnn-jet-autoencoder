@@ -41,8 +41,8 @@ class CNNAEFNSEncoder(nn.Module):
             # layer = Dense(32, activation='relu')(layer)
             nn.Linear(12800, 32),
             nn.ReLU(),
-            # layer = Dense(6)(layer)
-            nn.Linear(32, 6)
+            # # layer = Dense(6)(layer)
+            # nn.Linear(32, 6)
         ).to(device=device, dtype=dtype)
         
         self.__num_param = sum(p.nelement() for p in self.parameters() if p.requires_grad)
@@ -92,9 +92,9 @@ class CNNAEFNSDecoder(nn.Module):
         super(CNNAEFNSDecoder, self).__init__()
         # encoded = layer
         self.decoder = nn.Sequential(
-            # layer = Dense(32, activation='relu')(encoded)
-            nn.Linear(6, 32),
-            nn.ReLU(),
+            # # layer = Dense(32, activation='relu')(encoded)
+            # nn.Linear(6, 32),
+            # nn.ReLU(),
             # layer = Dense(12800, activation='relu')(layer)
             nn.Linear(32, 12800),
             nn.ReLU(),
