@@ -29,7 +29,6 @@ def initialize_autoencoder(
         )
         decoder = CNNAEFNSDecoder(
             batch_norm=args.arxiv_model_batch_norm, 
-            normalize=args.normalize,
             device=args.device, dtype=args.dtype
         )     
     else:

@@ -84,7 +84,6 @@ class CNNAEFNSDecoder(nn.Module):
     def __init__(
             self, 
             batch_norm: bool = False,
-            normalize: bool = False,
             device: Optional[torch.device] = DEFAULT_DEVICE,
             dtype: Optional[torch.dtype] = DEFAULT_DTYPE, 
             *args, **kwargs
@@ -118,10 +117,9 @@ class CNNAEFNSDecoder(nn.Module):
             nn.ReLU(),
             # layer = Reshape((1, 1600))(layer)
             Reshape(-1, 1, 1600),
-            # # layer = Activation('softmax')(layer)
-            # nn.Softmax(dim=-1),
+            # layer = Activation('softmax')(layer)
+            nn.Softmax(dim=-1),
             # decoded = Reshape((40, 40, 1))(layer)
-            nn.Tanh() if normalize else nn.Identity(),
             Reshape(-1, 1, 40, 40)
         ).to(device=device, dtype=dtype)
         
