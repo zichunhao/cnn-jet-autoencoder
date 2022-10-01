@@ -2,6 +2,9 @@ from typing import Union
 import torch
 from torch import nn
 
+EPS = 1e-16
+
+
 class CustomMSELoss(nn.Module):
     def __init__(self, lambda_nz: Union[int, float]):
         """Custom MSE that penalize nonzero values in cells that are supposed to be 0:
@@ -14,7 +17,7 @@ class CustomMSELoss(nn.Module):
         super(CustomMSELoss, self).__init__()
         self.lambda_nz = lambda_nz
         self.mse = nn.MSELoss()
-        
+
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         if self.lambda_nz == 1:
             return self.mse(input, target)
@@ -24,3 +27,16 @@ class CustomMSELoss(nn.Module):
             return loss_nonzero
         loss_zero = self.mse(input*zero_cells, target*zero_cells)
         return loss_nonzero + self.lambda_nz*loss_zero
+
+
+class RelativeMSELoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(
+        self, 
+        input: torch.Tensor, 
+        target: torch.Tensor
+    ) -> torch.Tensor:
+        # NOTE: zero cells are problematic
+        return torch.mean(torch.square((input - target) / (target + EPS)))
