@@ -57,9 +57,9 @@ class Linear2D(nn.Module):
                 f'Found: {x.shape=}.'
             )  
         x = x.to(self.device, self.dtype)
-        x = self.layer_height(x)
-        x = x.transpose(-1, -2)
         x = self.layer_width(x)
+        x = x.transpose(-1, -2)
+        x = self.layer_height(x)
         return x.transpose(-1, -2)
         
     
