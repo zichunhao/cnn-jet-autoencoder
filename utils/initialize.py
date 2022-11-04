@@ -82,13 +82,26 @@ def initialize_autoencoder(
         else:
             path_encoder = path_encoder / f'epoch_{args.load_epoch}_encoder_weights.pt'
             path_decoder = path_decoder / f'epoch_{args.load_epoch}_decoder_weights.pt'
-        encoder.load_state_dict(torch.load(path_encoder))
-        logging.info(f'Encoder weights loaded from {path_encoder}.')
-        decoder.load_state_dict(torch.load(path_decoder))
-        logging.info(f'Decoder weights loaded from {path_decoder}.')
+        
+        _load_weights(encoder, path_encoder, model_name="encoder")
+        _load_weights(decoder, path_decoder, model_name="decoder")
     
     return encoder, decoder
-        
+       
+def _load_weights(
+    model: torch.nn.Module, 
+    path: Path, 
+    model_name: str = None
+) -> None:
+    """Load weights from path."""
+    model_name = model_name if model_name is not None else model.__class__.__name__
+    try:
+        model.load_state_dict(torch.load(path))
+    except RuntimeError as e:
+        logging.error(f'Error loading {model_name} weights from {path}: {e}.')
+        logging.info('Loading weights with strict=False')
+        model.load_state_dict(torch.load(path), strict=False)
+    logging.info(f'Weights {model_name} loaded from {path}.')
 
 
 def initialize_optimizers(
