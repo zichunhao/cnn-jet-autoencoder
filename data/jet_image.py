@@ -3,15 +3,17 @@ import numpy as np
 import torch
 import awkward as ak
 from coffea.nanoevents.methods import vector
+
 ak.behavior.update(vector.behavior)
 
 IMG_VMAX = 0.05
+
 
 def pixelate(
     jet: np.ndarray,
     mask: Optional[np.ndarray] = None,
     npix: int = 64,
-    maxR: float = 1.0
+    maxR: float = 1.0,
 ) -> np.ndarray:
     """Pixelate the jet with Raghav Kansal's method.
     Reference: https://github.com/rkansal47/mnist_graph_gan/blob/neurips21/jets/final_plots.py#L191-L204
@@ -42,9 +44,8 @@ def pixelate(
 
     return jet_image
 
-def get_jet_rel(
-    jets: Union[np.ndarray, torch.Tensor]
-) -> np.ndarray:
+
+def get_jet_rel(jets: Union[np.ndarray, torch.Tensor]) -> np.ndarray:
     """Get jet momenta in relative coordinates (ptrel, etarel, phirel).
 
     :param jets: jet momenta in polar coordinates with shape (num_jets, 3, num_jet_particles)
@@ -54,17 +55,21 @@ def get_jet_rel(
     """
     import awkward as ak
     from coffea.nanoevents.methods import vector
+
     ak.behavior.update(vector.behavior)
 
     if isinstance(jets, torch.Tensor):
         jets = jets.detach().cpu().numpy()
 
-    part_vecs = ak.zip({
+    part_vecs = ak.zip(
+        {
             "pt": jets[:, :, 0:1],
             "eta": jets[:, :, 1:2],
             "phi": jets[:, :, 2:3],
-            "mass": np.zeros_like(jets[:, :, 1:2])
-        }, with_name="PtEtaPhiMLorentzVector")
+            "mass": np.zeros_like(jets[:, :, 1:2]),
+        },
+        with_name="PtEtaPhiMLorentzVector",
+    )
 
     # sum over all the particles in each jet to get the jet 4-vector
     try:
@@ -75,12 +80,13 @@ def get_jet_rel(
     jets = normalize(jets, jet_vecs)
     return jets
 
+
 def get_n_jet_images(
     jets: Union[np.ndarray, torch.Tensor],
     num_jets: int = 15,
     maxR: float = 0.5,
     npix: int = 24,
-    abs_coord: int = True
+    abs_coord: int = True,
 ) -> np.ndarray:
     """Get the first num_jets jet images from a collection of jets.
 
@@ -107,10 +113,8 @@ def get_n_jet_images(
     jet_image = np.stack(jet_image, axis=0)
     return jet_image
 
-def normalize(
-    jet: np.ndarray,
-    jet_vecs: ak.Array
-) -> np.ndarray:
+
+def normalize(jet: np.ndarray, jet_vecs: ak.Array) -> np.ndarray:
     """Normalize jet based on jet_vecs.
 
     :param jet: particle features to normalize.

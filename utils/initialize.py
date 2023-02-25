@@ -1,7 +1,18 @@
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).parent.parent))
 
 import logging
 from pathlib import Path
-from models import CNNJetImgEncoder, CNNJetImgDecoder, CNNAEFNSEncoder, CNNAEFNSDecoder
+from models import (
+    CNNJetImgEncoder,
+    CNNJetImgDecoder,
+    CNNAEFNSEncoder,
+    CNNAEFNSDecoder,
+    CNNAE_UCSD_PHYS139_Encoder,
+    CNNAE_UCSD_PHYS139_Decoder,
+)
 from argparse import Namespace
 from typing import List, Tuple, Union
 from torch.optim import Optimizer
@@ -10,29 +21,42 @@ from torch.utils.data import DataLoader
 
 import sys
 
-from .dataset import JetImageDataset
+from utils.dataset import JetImageDataset
 from sklearn.model_selection import train_test_split
-sys.path.insert(0, '../')
+
+sys.path.insert(0, "../")
 
 
 def initialize_autoencoder(
-    args: Namespace,
-    load_weights: bool = False
-) -> Union[Tuple[CNNJetImgEncoder, CNNJetImgDecoder],
-           Tuple[CNNAEFNSEncoder, CNNAEFNSDecoder]]:
+    args: Namespace, load_weights: bool = False
+) -> Union[
+    Tuple[CNNJetImgEncoder, CNNJetImgDecoder], Tuple[CNNAEFNSEncoder, CNNAEFNSDecoder]
+]:
     """Initialize the encoder and decoder."""
-    if args.arxiv_model:
+    if "arxiv" in args.model.lower():
         # arXiv:1808.08992
+        logging.info("Initialize arXiv model")
         encoder = CNNAEFNSEncoder(
-            batch_norm=args.arxiv_model_batch_norm, 
-            device=args.device, dtype=args.dtype
+            batch_norm=args.arxiv_model_batch_norm, device=args.device, dtype=args.dtype
         )
         decoder = CNNAEFNSDecoder(
-            batch_norm=args.arxiv_model_batch_norm, 
+            batch_norm=args.arxiv_model_batch_norm,
             normalize=args.normalize,
-            device=args.device, dtype=args.dtype
-        )     
+            device=args.device,
+            dtype=args.dtype,
+        )
+    
+    elif ("ucsd" in args.model.lower()) and (args.img_height == args.img_width):
+        logging.info("Initialize UCSD model")
+        encoder = CNNAE_UCSD_PHYS139_Encoder(
+            args.img_height, latent_dim=args.latent_vector_size
+        ).to(args.device, args.dtype)
+        decoder = CNNAE_UCSD_PHYS139_Decoder(
+            args.img_height, latent_dim=args.latent_vector_size
+        ).to(args.device, args.dtype)
+    
     else:
+        logging.info("Initialize CNNJetImg model")
         encoder = CNNJetImgEncoder(
             input_height=args.img_height,
             input_width=args.img_width,
@@ -49,7 +73,8 @@ def initialize_autoencoder(
             cnn_use_intermediates=args.encoder_cnn_use_intermediates,
             flatten_leaky_relu_negative_slope=args.encoder_flatten_leaky_relu_negative_slope,
             flatten_hidden_widths=args.encoder_flatten_hidden_widths,
-            device=args.device, dtype=args.dtype
+            device=args.device,
+            dtype=args.dtype,
         )
         decoder = CNNJetImgDecoder(
             latent_vector_size=args.latent_vector_size,
@@ -68,55 +93,55 @@ def initialize_autoencoder(
             cnn_padding_modes=args.decoder_cnn_padding_modes,
             cnn_leaky_relu_negative_slopes=args.decoder_cnn_leaky_relu_negative_slopes,
             output_leaky_relu_negative_slope=args.decoder_output_leaky_relu_negative_slope,
-            device=args.device, dtype=args.dtype
+            device=args.device,
+            dtype=args.dtype,
         )
 
     if load_weights:
         path = Path(args.load_weight_path)
-        path_encoder = path / 'weights_encoder'
-        path_decoder = path / 'weights_decoder'
+        path_encoder = path / "weights_encoder"
+        path_decoder = path / "weights_decoder"
         if args.load_epoch <= 0:
             # load the best epoch
-            path_encoder = path_encoder / 'best_weights_encoder.pt'
-            path_decoder = path_decoder / 'best_weights_decoder.pt'
+            path_encoder = path_encoder / "best_weights_encoder.pt"
+            path_decoder = path_decoder / "best_weights_decoder.pt"
         else:
-            path_encoder = path_encoder / f'epoch_{args.load_epoch}_encoder_weights.pt'
-            path_decoder = path_decoder / f'epoch_{args.load_epoch}_decoder_weights.pt'
-        
+            path_encoder = path_encoder / f"epoch_{args.load_epoch}_encoder_weights.pt"
+            path_decoder = path_decoder / f"epoch_{args.load_epoch}_decoder_weights.pt"
+
         _load_weights(encoder, path_encoder, model_name="encoder")
         _load_weights(decoder, path_decoder, model_name="decoder")
-    
+
     return encoder, decoder
-       
-def _load_weights(
-    model: torch.nn.Module, 
-    path: Path, 
-    model_name: str = None
-) -> None:
+
+
+def _load_weights(model: torch.nn.Module, path: Path, model_name: str = None) -> None:
     """Load weights from path."""
     model_name = model_name if model_name is not None else model.__class__.__name__
     try:
         model.load_state_dict(torch.load(path))
     except RuntimeError as e:
-        logging.error(f'Error loading {model_name} weights from {path}: {e}.')
-        logging.info('Loading weights with strict=False')
+        logging.error(f"Error loading {model_name} weights from {path}: {e}.")
+        logging.info("Loading weights with strict=False")
         model.load_state_dict(torch.load(path), strict=False)
-    logging.info(f'Weights {model_name} loaded from {path}.')
+    logging.info(f"Weights {model_name} loaded from {path}.")
 
 
 def initialize_optimizers(
-    args: Namespace,
-    encoder: CNNJetImgEncoder,
-    decoder: CNNJetImgDecoder
+    args: Namespace, encoder: CNNJetImgEncoder, decoder: CNNJetImgDecoder
 ) -> Tuple[Optimizer, Optimizer]:
-    """Initialize optimizers for the encoder and decoder."""    
-    if args.optimizer.lower() == 'adam':
+    """Initialize optimizers for the encoder and decoder."""
+    if args.optimizer.lower() == "adam":
         optimizer_encoder = torch.optim.Adam(encoder.parameters(), args.learning_rate)
         optimizer_decoder = torch.optim.Adam(decoder.parameters(), args.learning_rate)
-    elif args.optimizer.lower() == 'rmsprop':
-        optimizer_encoder = torch.optim.RMSprop(encoder.parameters(), lr=args.learning_rate)
-        optimizer_decoder = torch.optim.RMSprop(decoder.parameters(), lr=args.learning_rate)
-    elif args.optimizer.lower() == 'sgd':
+    elif args.optimizer.lower() == "rmsprop":
+        optimizer_encoder = torch.optim.RMSprop(
+            encoder.parameters(), lr=args.learning_rate
+        )
+        optimizer_decoder = torch.optim.RMSprop(
+            decoder.parameters(), lr=args.learning_rate
+        )
+    elif args.optimizer.lower() == "sgd":
         optimizer_encoder = torch.optim.SGD(encoder.parameters(), lr=args.learning_rate)
         optimizer_decoder = torch.optim.SGD(decoder.parameters(), lr=args.learning_rate)
     # TODO: add more supported optimizers if necessary
@@ -129,16 +154,14 @@ def initialize_optimizers(
 
 
 def initialize_dataloader(
-    args: Namespace,
-    paths: Union[List[Path], List[str]] = None, 
-    test: bool=False
+    args: Namespace, paths: Union[List[Path], List[str]] = None, test: bool = False
 ) -> DataLoader:
     """Initialize the dataloader for training
 
     :param test: Whether the data is for testing/inference purpose, defaults to False
         If True, data will not be shuffled.
     :type test: bool, optional
-    :param paths: Paths to the data files, defaults to None. 
+    :param paths: Paths to the data files, defaults to None.
     If None, the paths will be provided by --data-paths in args.
     :type paths: List of str or Path, optional
     :return: (train_loader, valid_loader) for train (`not test`) and test_loader if `test`
@@ -151,44 +174,39 @@ def initialize_dataloader(
     for path in paths:
         jet_imgs.append(torch.load(path).to(device=args.device, dtype=args.dtype))
     jet_imgs = torch.cat(jet_imgs, dim=0)
-    
+
     shuffle = not test  # do not shuffle if testing
     if not test:  # training
         jet_imgs_train, jet_imgs_valid = train_test_split(
-            jet_imgs,
-            test_size=args.test_size
+            jet_imgs, test_size=args.test_size
         )
         dataset_train = JetImageDataset(
-            jet_imgs=jet_imgs_train, 
-            normalize=args.normalize, 
-            shuffle=shuffle, 
-            device=args.device, 
-            dtype=args.dtype
+            jet_imgs=jet_imgs_train,
+            normalize=args.normalize,
+            shuffle=shuffle,
+            device=args.device,
+            dtype=args.dtype,
         )
         loader_train = DataLoader(
-            dataset=dataset_train, 
-            batch_size=args.batch_size, 
-            shuffle=shuffle
+            dataset=dataset_train, batch_size=args.batch_size, shuffle=shuffle
         )
         dataset_valid = JetImageDataset(
-            jet_imgs=jet_imgs_valid, 
-            normalize=args.normalize, 
-            shuffle=shuffle, 
-            device=args.device, 
-            dtype=args.dtype
+            jet_imgs=jet_imgs_valid,
+            normalize=args.normalize,
+            shuffle=shuffle,
+            device=args.device,
+            dtype=args.dtype,
         )
         loader_valid = DataLoader(
-            dataset=dataset_valid, 
-            batch_size=args.batch_size, 
-            shuffle=shuffle
+            dataset=dataset_valid, batch_size=args.batch_size, shuffle=shuffle
         )
         return (loader_train, loader_valid)
     else:
         dataset = JetImageDataset(
-            jet_imgs=jet_imgs, 
-            normalize=args.normalize, 
-            shuffle=shuffle, 
-            device=args.device, 
-            dtype=args.dtype
+            jet_imgs=jet_imgs,
+            normalize=args.normalize,
+            shuffle=shuffle,
+            device=args.device,
+            dtype=args.dtype,
         )
         return DataLoader(dataset=dataset, batch_size=args.batch_size, shuffle=shuffle)

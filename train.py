@@ -7,9 +7,9 @@ from utils import (
     parse_training_settings,
     parse_data_settings,
     parse_plot_settings,
-    get_compression_rate
+    get_compression_rate,
 )
-    
+
 
 import torch
 import math
@@ -18,62 +18,60 @@ import argparse
 
 from utils import ARXIV_MODEL_LATENT_VECTOR_SIZE
 
+
 def main(args: argparse.Namespace):
-    logging.info(f'{args=}')
-    
-    logging.info('Initialize dataloader')
+    logging.info(f"{args=}")
+
+    logging.info("Initialize dataloader")
     loader_train, loader_valid = initialize_dataloader(args, test=False)
-    
-    logging.info('Initialize models')
+
+    logging.info("Initialize models")
     encoder, decoder = initialize_autoencoder(args, load_weights=args.load_to_train)
-    logging.info(f'{encoder=}')
-    logging.info(f'{decoder=}')
-    logging.info(f'{encoder.num_learnable_parameters=}')
-    logging.info(f'{decoder.num_learnable_parameters=}')
+    logging.info(f"{encoder=}")
+    logging.info(f"{decoder=}")
+    logging.info(f"{encoder.num_learnable_parameters=}")
+    logging.info(f"{decoder.num_learnable_parameters=}")
     compression_rate = get_compression_rate(
-        img_height=args.img_height, 
-        img_width=args.img_width, 
-        latent_vector_size=args.latent_vector_size
+        img_height=args.img_height,
+        img_width=args.img_width,
+        latent_vector_size=args.latent_vector_size,
     )
-    logging.info(f'compression rate: {compression_rate}')
-    
-    logging.info('Initialize optimizers')
-    optim_encoder, optim_decoder = initialize_optimizers(
-        args, encoder, decoder
-    )
-    
+    logging.info(f"compression rate: {compression_rate}")
+
+    logging.info("Initialize optimizers")
+    optim_encoder, optim_decoder = initialize_optimizers(args, encoder, decoder)
+
     best_ep = train_loop(
-        args, 
-        train_loader=loader_train, 
+        args,
+        train_loader=loader_train,
         valid_loader=loader_valid,
         encoder=encoder,
         decoder=decoder,
         optimizer_encoder=optim_encoder,
         optimizer_decoder=optim_decoder,
-        lambda_nz=args.lambda_nz
+        lambda_nz=args.lambda_nz,
     )
-    logging.info(f'Training completed. Best epoch: {best_ep}')
+    logging.info(f"Training completed. Best epoch: {best_ep}")
 
 
 def setup_argparse() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description='CNN Autoencoder Training Options'
-    )
+    parser = argparse.ArgumentParser(description="CNN Autoencoder Training Options")
     parser = parse_model_settings(parser)
     parser = parse_training_settings(parser)
     parser = parse_data_settings(parser)
     parser = parse_plot_settings(parser)
-    
+
     args = parser.parse_args()
     if args.patience < 0:
         args.patience = math.inf
-    if args.arxiv_model:
+    if "arxiv" in args.model.lower():
         args.latent_vector_size = ARXIV_MODEL_LATENT_VECTOR_SIZE
     return args
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
+
     torch.autograd.set_detect_anomaly(True)
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     args = setup_argparse()
