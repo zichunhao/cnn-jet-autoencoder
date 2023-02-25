@@ -168,14 +168,14 @@ def main(args: argparse.Namespace):
 
 
 def setup_argparse() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="CNN Autoencoder Training Options")
+    parser = argparse.ArgumentParser(description="CNN Autoencoder Testing Options")
     parser = parse_model_settings(parser)
     parser = parse_training_settings(parser, test=True)
     parser = parse_data_settings(parser)
     parser = parse_plot_settings(parser)
 
     args = parser.parse_args()
-    if args.arxiv_model:
+    if "arxiv" in args.model.lower():
         args.latent_vector_size = ARXIV_MODEL_LATENT_VECTOR_SIZE
     return args
 
