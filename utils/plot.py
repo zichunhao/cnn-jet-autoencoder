@@ -71,6 +71,10 @@ def plot_jet_imgs(
     # mean jet image
     avg_img_target = torch.mean(imgs_target, dim=0)
     avg_img_recons = torch.mean(imgs_recons, dim=0)
+    
+    # avoid invalid values due to numerical errors
+    imgs_target = torch.clip(imgs_target, min=0, max=1)
+    imgs_recons = torch.clip(imgs_recons, min=0, max=1)
 
     if cutoff:
         # the largest order of magnitude smaller than the minimum value of the target image
