@@ -15,9 +15,9 @@ class CNNAE_UCSD_PHYS139_Encoder(nn.Module):
         """
         Encoder of the CNN Autoencoder from the UCSD PHYS 139/239 course
         by Prof. Javier Duarte (PyTorch version).
-        
+
         Source: https://github.com/jmduarte/phys139_239/blob/main/notebooks/07_Autoencoder.ipynb
-        
+
         :param im_size: Size of the image to be encoded.
         :type im_size: int
         :param latent_dim: Dimension of the latent space.
@@ -55,7 +55,7 @@ class CNNAE_UCSD_PHYS139_Encoder(nn.Module):
             nn.Flatten(start_dim=1),  # keep batch dim
             nn.Linear(encoder_dim * encoder_dim * 128, latent_dim),
         )
-        
+
         # number of learnable parameters
         self.__num_param = sum(
             p.nelement() for p in self.parameters() if p.requires_grad
@@ -86,7 +86,7 @@ class CNNAE_UCSD_PHYS139_Encoder(nn.Module):
                 f"Got {x.shape[-1]}x{x.shape[-2]}."
             )
         return self.encoder(x)
-    
+
     @property
     def num_learnable_parameters(self) -> int:
         """Number of learnable parameters.
@@ -95,7 +95,7 @@ class CNNAE_UCSD_PHYS139_Encoder(nn.Module):
         :rtype: int
         """
         return self.__num_param
-    
+
     def l1_norm(self):
         """L1 norm of the model parameters."""
         return sum(p.abs().sum() for p in self.parameters())
@@ -110,9 +110,9 @@ class CNNAE_UCSD_PHYS139_Decoder(nn.Module):
         """
         Decoder of the CNN Autoencoder from the UCSD PHYS 139/239 course
         by Prof. Javier Duarte (PyTorch version).
-        
+
         Source: https://github.com/jmduarte/phys139_239/blob/main/notebooks/07_Autoencoder.ipynb
-        
+
         :param im_size: Size of the image to be encoded.
         :type im_size: int
         :param latent_dim: Dimension of the latent space.
@@ -149,7 +149,7 @@ class CNNAE_UCSD_PHYS139_Decoder(nn.Module):
             # x_out = Softmax(name="softmax", axis=[-2, -3])(x)
             nn.Softmax2d(),
         )
-        
+
         # number of learnable parameters
         self.__num_param = sum(
             p.nelement() for p in self.parameters() if p.requires_grad
@@ -181,7 +181,7 @@ class CNNAE_UCSD_PHYS139_Decoder(nn.Module):
         :rtype: int
         """
         return self.__num_param
-    
+
     def l1_norm(self):
         """L1 norm of the model parameters."""
         return sum(p.abs().sum() for p in self.parameters())
@@ -189,6 +189,7 @@ class CNNAE_UCSD_PHYS139_Decoder(nn.Module):
     def l2_norm(self):
         """L2 norm of the model parameters."""
         return sum(torch.pow(p, 2).sum() for p in self.parameters())
+
 
 class Reshape(nn.Module):
     def __init__(self, *args) -> None:
@@ -222,7 +223,6 @@ class Conv2dSame(nn.Conv2d):
         return pad_1, pad_2
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-
         pad_top, pad_bottom = self.__get_pad(
             kernel_size=self.kernel_size[0],
             padding=self.padding[0],

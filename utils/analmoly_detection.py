@@ -96,7 +96,6 @@ def anomaly_detection_ROC_AUC(
             ax.set_yscale("log")
 
             for kind, auc in auc:
-
                 fpr, tpr, thresholds = roc_curves[kind]
                 ax.plot(tpr, fpr, label=f"{kind} (AUC: {auc:.5f})")
                 for y_value in rocs_hlines:

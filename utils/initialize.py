@@ -45,7 +45,7 @@ def initialize_autoencoder(
             device=args.device,
             dtype=args.dtype,
         )
-    
+
     elif ("ucsd" in args.model.lower()) and (args.img_height == args.img_width):
         logging.info("Initialize UCSD model")
         encoder = CNNAE_UCSD_PHYS139_Encoder(
@@ -54,7 +54,7 @@ def initialize_autoencoder(
         decoder = CNNAE_UCSD_PHYS139_Decoder(
             args.img_height, latent_dim=args.latent_vector_size
         ).to(args.device, args.dtype)
-    
+
     else:
         logging.info("Initialize CNNJetImg model")
         encoder = CNNJetImgEncoder(

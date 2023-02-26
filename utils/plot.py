@@ -9,6 +9,7 @@ from typing import List, Optional, Union
 
 IMG_VMAX = 0.05
 
+
 def plot_jet_imgs(
     imgs_target: Union[torch.Tensor, List[torch.Tensor]],
     imgs_recons: Union[torch.Tensor, List[torch.Tensor]],
