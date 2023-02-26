@@ -109,8 +109,11 @@ def initialize_autoencoder(
             path_encoder = path_encoder / f"epoch_{args.load_epoch}_encoder_weights.pt"
             path_decoder = path_decoder / f"epoch_{args.load_epoch}_decoder_weights.pt"
 
-        _load_weights(encoder, path_encoder, model_name="encoder")
-        _load_weights(decoder, path_decoder, model_name="decoder")
+        try:
+            _load_weights(encoder, path_encoder, model_name="encoder")
+            _load_weights(decoder, path_decoder, model_name="decoder")
+        except FileNotFoundError as e:
+            logging.error(f"Error loading weights from {path}: {e}.")
 
     return encoder, decoder
 
