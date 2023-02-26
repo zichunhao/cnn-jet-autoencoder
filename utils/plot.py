@@ -1,11 +1,10 @@
 from copy import copy
 import logging
-import math
 from pathlib import Path
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
-from os import path as osp
 import torch
+import numpy as np
 from typing import List, Optional, Union
 
 IMG_VMAX = 1
@@ -71,7 +70,7 @@ def plot_jet_imgs(
     # mean jet image
     avg_img_target = torch.mean(imgs_target, dim=0)
     avg_img_recons = torch.mean(imgs_recons, dim=0)
-    
+
     # avoid invalid values due to numerical errors
     imgs_target = torch.clip(imgs_target, min=0, max=1)
     imgs_recons = torch.clip(imgs_recons, min=0, max=1)
@@ -79,7 +78,7 @@ def plot_jet_imgs(
     if cutoff:
         # the largest order of magnitude smaller than the minimum value of the target image
 
-        mask = (imgs_recons > IMG_VMIN)
+        mask = imgs_recons > IMG_VMIN
         imgs_recons = imgs_recons * mask
 
     # return to numpy
@@ -180,18 +179,31 @@ def plot_jet_imgs(
     return
 
 
-def _type_correction(jet_images: Union[torch.Tensor, List[torch.Tensor]]) -> torch.Tensor:
+def _type_correction(
+    jet_images: Union[torch.Tensor, List[torch.Tensor], np.ndarray, List[np.ndarray]]
+) -> torch.Tensor:
     if isinstance(jet_images, torch.Tensor):
         return jet_images
+
     elif isinstance(jet_images, list):
         if isinstance(jet_images[0], torch.Tensor):
+            # list of torch.Tensor
             return torch.cat(jet_images, dim=0)
+        elif isinstance(jet_images[0], np.ndarray):
+            # list of numpy array
+            return torch.from_numpy(np.stack(jet_images, axis=0))
         else:
             raise TypeError(
                 "jet_images must be a list of torch.Tensor. "
                 f"Got: {type(jet_images)}."
             )
-    else:  # invalid type
+
+    elif isinstance(jet_images, np.ndarray):
+        # numpy array
+        return torch.from_numpy(jet_images)
+
+    else:
+        # invalid type
         raise TypeError(
             "jet_images must be either torch.Tensor or np.ndarray. "
             f"Got: {type(jet_images)}."
