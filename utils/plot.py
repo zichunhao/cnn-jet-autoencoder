@@ -8,7 +8,7 @@ from os import path as osp
 import torch
 from typing import List, Optional, Union
 
-IMG_VMAX = 0.05
+IMG_VMAX = 1
 IMG_VMIN = 1e-8
 
 
