@@ -1,5 +1,7 @@
 from copy import copy
+import logging
 import math
+from pathlib import Path
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
 from os import path as osp
@@ -151,13 +153,22 @@ def plot_jet_imgs(
     # save figure
     plt.tight_layout()
     if save_path is not None:
+        save_path = Path(save_path)
+        save_path.mkdir(parents=True, exist_ok=True)
         fig_name = "jet_images"
         if epoch is not None:
             fig_name += f"_epoch_{epoch}"
         if (file_label is not None) and (len(file_label) > 0):
             fig_name += f"_{file_label}"
         fig_name += ".pdf"
-        fig.savefig(osp.join(save_path, fig_name))
+        try:
+            fig.savefig(save_path / fig_name)
+        except ValueError as e:
+            logging.error("Failed to save jet image figure:")
+            logging.error(e)
+            torch.save(imgs_target, save_path / "imgs_target.pt")
+            torch.save(imgs_recons, save_path / "imgs_recons.pt")
+            logging.info(f"Saved jet images as .pt files in {save_path}.")
     if show:
         plt.show()
     plt.close()
