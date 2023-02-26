@@ -22,9 +22,9 @@ def parse_data_settings(parser: argparse.ArgumentParser) -> argparse.Namespace:
     parser.add_argument("--data-label", type=str, metavar="", help="Label of the data.")
     parser.add_argument(
         "--normalize",
-        default=False,
-        action="store_true",
-        help="Whether to normalize the jet images.",
+        default=None,
+        type=str,
+        help="The strategy to normalize the jet image. None if no normalization is needed. Options: (max, sum)",
     )
     return parser
 

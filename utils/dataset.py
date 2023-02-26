@@ -1,3 +1,4 @@
+import logging
 import sys
 from pathlib import Path
 
@@ -13,7 +14,7 @@ class JetImageDataset(Dataset):
     def __init__(
         self,
         jet_imgs: torch.Tensor,
-        normalize: bool = True,
+        normalize: Optional[str] = None,
         shuffle: bool = True,
         device: Optional[torch.device] = DEFAULT_DEVICE,
         dtype: Optional[torch.dtype] = DEFAULT_DTYPE,
@@ -37,17 +38,36 @@ class JetImageDataset(Dataset):
         jet_imgs = jet_imgs.to(self.device, self.dtype)
 
         # normalize jet images by dividing the max value in each jet image
-        if normalize:
-            self.norm_factors = (
-                jet_imgs.abs()
-                .max(dim=-1, keepdim=True)
-                .values.max(dim=-2, keepdim=True)
-                .values
-            )
+        if normalize is not None:
+            if normalize.lower() == "max":
+                # normalize by the max value in each jet image
+                self.norm_factors = (
+                    jet_imgs.abs()
+                    .max(dim=-1, keepdim=True)
+                    .values.max(dim=-2, keepdim=True)
+                    .values
+                )
+            elif normalize.lower() == "sum":
+                # normalize by the sum of all values in each jet image
+                self.norm_factors = jet_imgs.sum(dim=-1, keepdim=True).sum(
+                    dim=-2, keepdim=True
+                )
+            elif normalize.lower() in ("", "none"):
+                # no normalization
+                self.norm_factors = torch.ones(
+                    (len(jet_imgs), 1, 1), device=self.device, dtype=self.dtype
+                )
+            else:
+                logging.error(
+                    f"Unknown normalization method: {normalize}. Use 'sum' instead."
+                )
+                self.norm_factors = jet_imgs.sum(dim=-1, keepdim=True).sum(
+                    dim=-2, keepdim=True
+                )
             self.jet_imgs = jet_imgs / self.norm_factors
         else:
-            self.norm_factors = torch.ones_like(
-                jet_imgs, device=self.device, dtype=self.dtype
+            self.norm_factors = torch.ones(
+                (len(jet_imgs), 1, 1), device=self.device, dtype=self.dtype
             )
             self.jet_imgs = jet_imgs
 
