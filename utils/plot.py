@@ -3,11 +3,11 @@ import math
 from matplotlib import pyplot as plt
 from matplotlib.colors import LogNorm
 from os import path as osp
-import numpy as np
 import torch
 from typing import List, Optional, Union
 
 IMG_VMAX = 0.05
+IMG_VMIN = 1e-8
 
 
 def plot_jet_imgs(
@@ -70,18 +70,10 @@ def plot_jet_imgs(
     avg_img_target = torch.mean(imgs_target, dim=0)
     avg_img_recons = torch.mean(imgs_recons, dim=0)
 
-    vmin = 10 ** math.ceil(
-        math.log(
-            (imgs_target[imgs_target > 0])
-            .min()
-            .item(),  # find the minimum nonzero value
-            10,
-        )
-    )
     if cutoff:
         # the largest order of magnitude smaller than the minimum value of the target image
 
-        mask = imgs_recons > vmin
+        mask = (imgs_recons > IMG_VMIN)
         imgs_recons = imgs_recons * mask
 
     # return to numpy
@@ -98,14 +90,9 @@ def plot_jet_imgs(
     # plot jet images
     fig, axs = plt.subplots(num_rows, 2, figsize=(7.5, 3 * num_rows))
 
-    # average jet image
-    # vmin_lognorm = min(
-    #     10 ** math.ceil(math.log(avg_img_target[avg_img_target > 0].min(), 10)),
-    #     10 ** math.ceil(math.log(avg_img_recons[avg_img_recons > 0].min(), 10)),
-    # )
     fig_target = axs[0][0].imshow(
         avg_img_target,
-        norm=LogNorm(vmin=vmin, vmax=1),
+        norm=LogNorm(vmin=IMG_VMIN, vmax=1),
         origin="lower",
         cmap=cm,
         interpolation="nearest",
@@ -115,7 +102,7 @@ def plot_jet_imgs(
 
     _ = axs[0][1].imshow(
         avg_img_recons,
-        norm=LogNorm(vmin=vmin, vmax=1),
+        norm=LogNorm(vmin=IMG_VMIN, vmax=1),
         origin="lower",
         cmap=cm,
         interpolation="nearest",
@@ -139,7 +126,7 @@ def plot_jet_imgs(
             origin="lower",
             cmap=cm,
             interpolation="nearest",
-            vmin=vmin,
+            vmin=IMG_VMIN,
             extent=[-maxR, maxR, -maxR, maxR],
             vmax=IMG_VMAX,
         )
@@ -150,7 +137,7 @@ def plot_jet_imgs(
             origin="lower",
             cmap=cm,
             interpolation="nearest",
-            vmin=vmin,
+            vmin=IMG_VMIN,
             extent=[-maxR, maxR, -maxR, maxR],
             vmax=IMG_VMAX,
         )
@@ -178,7 +165,7 @@ def plot_jet_imgs(
     return
 
 
-def _type_correction(jet_images: Union[torch.Tensor, List[torch.Tensor]]) -> None:
+def _type_correction(jet_images: Union[torch.Tensor, List[torch.Tensor]]) -> torch.Tensor:
     if isinstance(jet_images, torch.Tensor):
         return jet_images
     elif isinstance(jet_images, list):
