@@ -48,7 +48,7 @@ def plot_jet_images(
 ) -> None:
     if len(images) != len(titles):
         raise ValueError("Length of images and titles must be the same")
-    
+
     n_cols = len(images)
     n_rows = len(images[0])
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(n_cols * 5, n_rows * 5))
@@ -80,18 +80,18 @@ def main(
     latent_dim: int = 16,  # latent dimension of the autoencoder
     im_size: int = 40,  # jet image size
     maxR: float = 0.8,  # delta R for jet images
-    num_jets: Optional[Union[
-        int, float
-    ]] = None,  # number of jets to use for training (None or -1 for all)
+    num_jets: Optional[
+        Union[int, float]
+    ] = None,  # number of jets to use for training (None or -1 for all)
     batch_size: int = 64,  # batch size
     total_epochs: int = 2000,  # total number of epochs
     patience: int = 50,  # patience for early stopping
     verbose: int = 2,  # verbosity level for training
     num_imgs_plot: int = 6,  # number of images to plot
 ):
-    """Script for CNNAE on JetNet dataset, 
+    """Script for CNNAE on JetNet dataset,
     adapted from https://github.com/jmduarte/phys139_239/blob/d687cc72cf57661f89d0a14c20e79e00026d36a7/notebooks/07_Autoencoder.ipynb
-    
+
     :param proj_dir: project directory
     :param data_dir: data directory (for storing downloaded data)
     :param latent_dim: latent dimension of the autoencoder
@@ -122,10 +122,11 @@ def main(
         except AttributeError as e:
             # upgrade to latest version of jetnet
             import pip
+
             pip.main(["install", "--upgrade", "jetnet"])
             data = jetnet.datasets.JetNet(jet_type=jet_type, data_dir=data_dir)
             p = data.particle_data  # (etarel, phirel, ptrel, mask)
-            
+
         # particle momenta components (relative coordinates)
         eta_rel, phi_rel, pt_rel = p[..., 0], p[..., 1], p[..., 2]
         p_polar = np.stack([eta_rel, phi_rel, pt_rel], axis=-1)
@@ -215,18 +216,16 @@ def main(
         epochs=total_epochs,
         verbose=verbose,
         validation_data=(jet_imgs_val["qcd"], jet_imgs_val["qcd"]),
-        callbacks=EarlyStopping(
-            monitor="val_loss", patience=patience
-        ),
+        callbacks=EarlyStopping(monitor="val_loss", patience=patience),
     )
 
     model.save(proj_dir / "model.h5")
-    
+
     # evaluate autoencoder
 
     fig_dir = proj_dir / "figures"
     fig_dir.mkdir(exist_ok=True, parents=True)
-    
+
     # reconstruction
     images_target = {}
     images_recons = {}
@@ -242,7 +241,7 @@ def main(
 
     torch.save(images_target, proj_dir / "images_target.pt")
     torch.save(images_recons, proj_dir / "images_recons.pt")
-    
+
     for jet_type in jet_types:
         target = images_target[jet_type]
         recons = images_recons[jet_type]
@@ -277,8 +276,13 @@ def main(
             np.concatenate([scores_bkg, scores_sig]),
         )
         auc = metrics.auc(fpr, tpr)
-        ae_stats[jet_type] = {"tpr": tpr, "fpr": fpr, "auc": auc, "threshold": threshold}
-        
+        ae_stats[jet_type] = {
+            "tpr": tpr,
+            "fpr": fpr,
+            "auc": auc,
+            "threshold": threshold,
+        }
+
         if auc < 0.5:
             fpr, tpr, _ = metrics.roc_curve(
                 np.concatenate([np.ones(len(scores_bkg)), -np.ones(len(scores_sig))]),
@@ -297,7 +301,6 @@ def main(
         plt.savefig(fig_dir / f"roc_{jet_type}.pdf")
         plt.close()
 
-
     # qcd vs all
     logging.info("Plotting ROC curve for qcd vs. all...")
     scores_sig = np.concatenate(
@@ -308,8 +311,17 @@ def main(
         np.concatenate([scores_bkg, scores_sig]),
     )
     auc = metrics.auc(fpr, tpr)
-    ae_stats["all"] = {"tpr": tpr, "fpr": fpr, "auc": auc, "threshold": threshold}
-    
+    tpr_10_percent = tpr[np.searchsorted(fpr, 0.1)]
+    tpr_1_percent = tpr[np.searchsorted(fpr, 0.01)]
+
+    ae_stats["all"] = {
+        "tpr": tpr,
+        "fpr": fpr,
+        "auc": auc,
+        "tpr @ fpr=10%": tpr_10_percent,
+        "tpr @ fpr=1%": tpr_1_percent,
+    }
+
     if auc < 0.5:
         fpr, tpr, _ = metrics.roc_curve(
             np.concatenate([np.ones(len(scores_bkg)), -np.ones(len(scores_sig))]),
