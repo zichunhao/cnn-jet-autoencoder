@@ -204,7 +204,7 @@ def main(
     encoder = Model(inputs=x_in, outputs=x_enc, name="encoder")
 
     compression_rate = im_size * im_size / latent_dim
-    logging.info(f"Compression rate: {compression_rate}")
+    logging.info(f"Compression rate: {compression_rate}%")
 
     # train autoencoder
     logging.info("Training autoencoder with early stopping...")
