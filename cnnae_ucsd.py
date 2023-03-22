@@ -73,6 +73,22 @@ def plot_jet_images(
     plt.close()
     return
 
+class NumpyEncoder(json.JSONEncoder):
+    """ Special json encoder for np types 
+    Source: https://github.com/mpld3/mpld3/issues/434#issuecomment-340255689
+    """
+    def default(self, obj):
+        if isinstance(obj, (np.int_, np.intc, np.intp, np.int8,
+            np.int16, np.int32, np.int64, np.uint8,
+            np.uint16,np.uint32, np.uint64)):
+            return int(obj)
+        elif isinstance(obj, (np.float_, np.float16, np.float32, 
+            np.float64)):
+            return float(obj)
+        elif isinstance(obj,(np.ndarray,)): #### This is the fix
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
+
 
 def main(
     proj_dir: Union[Path, str],  # project directory
@@ -276,12 +292,8 @@ def main(
             np.concatenate([scores_bkg, scores_sig]),
         )
         auc = metrics.auc(fpr, tpr)
-        ae_stats[jet_type] = {
-            "tpr": tpr,
-            "fpr": fpr,
-            "auc": auc,
-            "threshold": threshold,
-        }
+        tpr_10_percent = tpr[np.searchsorted(fpr, 0.1)]
+        tpr_1_percent = tpr[np.searchsorted(fpr, 0.01)]
 
         if auc < 0.5:
             fpr, tpr, _ = metrics.roc_curve(
@@ -289,6 +301,14 @@ def main(
                 np.concatenate([scores_bkg, scores_sig]),
             )
             auc = metrics.auc(fpr, tpr)
+            
+        ae_stats["all"] = {
+            "tpr": tpr,
+            "fpr": fpr,
+            "auc": auc,
+            "tpr @ fpr=10%": tpr_10_percent,
+            "tpr @ fpr=1%": tpr_1_percent,
+        }
 
         plt.plot(tpr, fpr, label="AUC = {:.4f}".format(auc))
         plt.xlabel(r"$\varepsilon_s$")
@@ -311,6 +331,14 @@ def main(
         np.concatenate([scores_bkg, scores_sig]),
     )
     auc = metrics.auc(fpr, tpr)
+
+    if auc < 0.5:
+        fpr, tpr, _ = metrics.roc_curve(
+            np.concatenate([np.ones(len(scores_bkg)), -np.ones(len(scores_sig))]),
+            np.concatenate([scores_bkg, scores_sig]),
+        )
+        auc = metrics.auc(fpr, tpr)
+    
     tpr_10_percent = tpr[np.searchsorted(fpr, 0.1)]
     tpr_1_percent = tpr[np.searchsorted(fpr, 0.01)]
 
@@ -321,13 +349,6 @@ def main(
         "tpr @ fpr=10%": tpr_10_percent,
         "tpr @ fpr=1%": tpr_1_percent,
     }
-
-    if auc < 0.5:
-        fpr, tpr, _ = metrics.roc_curve(
-            np.concatenate([np.ones(len(scores_bkg)), -np.ones(len(scores_sig))]),
-            np.concatenate([scores_bkg, scores_sig]),
-        )
-        auc = metrics.auc(fpr, tpr)
 
     plt.plot(tpr, fpr, label="AUC = {:.4f}".format(auc))
     plt.xlabel(r"$\varepsilon_s$")
@@ -341,7 +362,8 @@ def main(
     plt.savefig(fig_dir / f"roc_all.pdf")
     plt.close()
 
-    json.dump(ae_stats, open(proj_dir / "anomaly_detection.json", "w"))
+    json.dump(ae_stats, open(proj_dir / "anomaly_detection.json", "w"), cls=NumpyEncoder)
+    torch.save(ae_stats, proj_dir / "anomaly_detection.pt")
 
     logging.info("Anomaly detection done")
     return
