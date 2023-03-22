@@ -334,6 +334,7 @@ def main(
     plt.ylabel(r"$\varepsilon_b$")
     plt.yscale("log")
     plt.ylim(1e-3, 1)
+    plt.xlim(0, 1)
     plt.grid(linestyle="--", linewidth=0.5)
     plt.legend()
 
