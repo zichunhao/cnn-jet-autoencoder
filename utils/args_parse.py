@@ -10,7 +10,7 @@ from math import inf
 from utils.const import DEFAULT_DEVICE, DEFAULT_DTYPE
 
 
-def parse_data_settings(parser: argparse.ArgumentParser) -> argparse.Namespace:
+def parse_data_settings(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     parser.add_argument(
         "--data-paths",
         "-dp",
@@ -31,7 +31,7 @@ def parse_data_settings(parser: argparse.ArgumentParser) -> argparse.Namespace:
 
 def parse_training_settings(
     parser: argparse.ArgumentParser, test: bool = False
-) -> argparse.Namespace:
+) -> argparse.ArgumentParser:
     parser.add_argument(
         "--learning-rate",
         "-lr",
