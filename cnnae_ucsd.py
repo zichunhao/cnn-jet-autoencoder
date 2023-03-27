@@ -146,28 +146,13 @@ def main(
         # particle momenta components (relative coordinates)
         eta_rel, phi_rel, pt_rel = p[..., 0], p[..., 1], p[..., 2]
         p_polar = np.stack([eta_rel, phi_rel, pt_rel], axis=-1)
-
-        if num_jets is not None and num_jets > 0:
-            if num_jets < 1:
-                # use fraction of jets
-                num_jets = int(num_jets * len(p_polar))
-            else:
-                try:
-                    num_jets = int(num_jets)
-                except ValueError as e:
-                    # use all jets
-                    logging.error(f"Error when parsing num_jets: {e}")
-                    logging.error("Using all jets instead")
-                    num_jets = len(p_polar)
-            p_polar = p_polar[:num_jets]
-
         img = jetnet.utils.to_image(p_polar, im_size=im_size, maxR=maxR)
         img = np.expand_dims(img, axis=-1)
         img_sum = np.sum(img, axis=(1, 2), keepdims=True)
+        jet_imgs_norm[jet_type] = img_sum
         jet_imgs[jet_type] = np.copy(img / img_sum)
-        jet_imgs_norm[jet_type] = np.copy(img)
 
-        del data, p, eta_rel, phi_rel, pt_rel, p_polar, img, img_sum
+        del data, p, eta_rel, phi_rel, pt_rel, p_polar
 
     # combine g and q jets to make qcd jets
     jet_imgs["qcd"] = np.concatenate([jet_imgs["g"], jet_imgs["q"]], axis=0)
@@ -181,11 +166,28 @@ def main(
     jet_imgs_val = {}
     jet_imgs_test = {}
     for jet_type in jet_types:
-        jet_img_train, jet_imgs_test[jet_type] = train_test_split(
-            jet_imgs[jet_type], test_size=0.2, random_state=42
-        )
+        # jet_img_train, jet_imgs_test[jet_type] = train_test_split(
+        #     jet_imgs[jet_type], test_size=0.2, random_state=42
+        # )
+        train_valid_size = int(0.8 * len(jet_imgs[jet_type]))
+        jet_img_train, jet_imgs_test[jet_type] = jet_imgs[jet_type][:train_valid_size], jet_imgs[jet_type][train_valid_size:]
+        # train/validation split
+        if num_jets is not None and num_jets > 0:
+            if num_jets < 1:
+                # use fraction of jets
+                num_jets = int(num_jets * len(jet_img_train))
+            else:
+                try:
+                    num_jets = int(num_jets)
+                except ValueError as e:
+                    # use all jets
+                    logging.error(f"Error when parsing num_jets: {e}")
+                    logging.error("Using all jets instead")
+                    num_jets = len(jet_img_train)
+            jet_img_train = jet_img_train[:num_jets]
+        
         jet_imgs_train[jet_type], jet_imgs_val[jet_type] = train_test_split(
-            jet_img_train, test_size=0.2, random_state=42
+            jet_img_train, test_size=0.25, random_state=42
         )
 
         del jet_img_train
