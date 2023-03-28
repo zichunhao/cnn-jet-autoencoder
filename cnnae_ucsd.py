@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 import sys
 from typing import List, Optional, Union
+from data.jet_image import get_n_jet_images as get_jet_images
 
 import jetnet
 import torch
@@ -145,8 +146,15 @@ def main(
 
         # particle momenta components (relative coordinates)
         eta_rel, phi_rel, pt_rel = p[..., 0], p[..., 1], p[..., 2]
-        p_polar = np.stack([eta_rel, phi_rel, pt_rel], axis=-1)
-        img = jetnet.utils.to_image(p_polar, im_size=im_size, maxR=maxR)
+        p_polar = np.stack([pt_rel, eta_rel, phi_rel], axis=-1)
+        img = get_jet_images(
+            jets=p_polar,
+            num_jets=len(p_polar),
+            maxR=maxR,
+            npix=im_size,
+            abs_coord=False,  # relative coordinates already
+        )
+        # img = jetnet.utils.to_image(p_polar, im_size=im_size, maxR=maxR)
         img = np.expand_dims(img, axis=-1)
         img_sum = np.sum(img, axis=(1, 2), keepdims=True)
         jet_imgs_norm[jet_type] = img_sum
