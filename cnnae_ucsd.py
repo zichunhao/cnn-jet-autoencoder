@@ -133,7 +133,10 @@ def main(
     jet_imgs_norm = {}
     for jet_type in jet_types:
         logging.info(f"Preparing data for {jet_type} jets...")
-        data = jetnet.datasets.JetNet(jet_type=jet_type, data_dir=data_dir)
+        try:
+            data = jetnet.datasets.JetNet(jet_type=jet_type, data_dir=data_dir)
+        except OSError:
+            data = jetnet.datasets.JetNet(jet_type=jet_type)
         try:
             p = data.particle_data  # (etarel, phirel, ptrel, mask)
         except AttributeError as e:
