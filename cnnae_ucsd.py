@@ -187,9 +187,11 @@ def main(
             if num_jets < 1:
                 # use fraction of jets
                 num_jets = int(num_jets * len(jet_img_train))
+                logging.info(f"Using {num_jets} jets out of {len(jet_img_train)} for training")
             else:
                 try:
                     num_jets = int(num_jets)
+                    logging.info(f"Using {num_jets} jets out of {len(jet_img_train)} for training")
                 except ValueError as e:
                     # use all jets
                     logging.error(f"Error when parsing num_jets: {e}")
