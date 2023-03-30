@@ -184,7 +184,7 @@ def main(
         jet_img_train, jet_imgs_test[jet_type] = jet_imgs[jet_type][:train_valid_size], jet_imgs[jet_type][train_valid_size:]
         # train/validation split
         if num_jets is not None and num_jets > 0:
-            if num_jets < 1:
+            if num_jets <= 1:
                 # use fraction of jets
                 num_jets = int(num_jets * len(jet_img_train))
                 logging.info(f"Using {num_jets} jets out of {len(jet_img_train)} for training")
