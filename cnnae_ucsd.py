@@ -317,7 +317,7 @@ def main(
             )
             auc = metrics.auc(fpr, tpr)
             
-        ae_stats["all"] = {
+        ae_stats[jet_type] = {
             "tpr": tpr,
             "fpr": fpr,
             "auc": auc,
