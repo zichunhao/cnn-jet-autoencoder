@@ -165,13 +165,6 @@ def main(
 
         del data, p, eta_rel, phi_rel, pt_rel, p_polar
 
-    # combine g and q jets to make qcd jets
-    jet_imgs["qcd"] = np.concatenate([jet_imgs["g"], jet_imgs["q"]], axis=0)
-    jet_imgs.pop("g")
-    jet_imgs.pop("q")
-    jet_types = list(jet_imgs.keys())
-    logging.info(f"jet types: {jet_types}")
-
     # training-validation-test split
     jet_imgs_train = {}
     jet_imgs_val = {}
@@ -202,8 +195,22 @@ def main(
         jet_imgs_train[jet_type], jet_imgs_val[jet_type] = train_test_split(
             jet_img_train, test_size=0.25, random_state=42
         )
-
+        
         del jet_img_train
+    
+    # combine g and q jets to make qcd jets
+    jet_imgs_train["qcd"] = np.concatenate([jet_imgs_train["g"], jet_imgs_train["q"]], axis=0)
+    jet_imgs_train.pop("g")
+    jet_imgs_train.pop("q")
+    jet_imgs_val["qcd"] = np.concatenate([jet_imgs_val["g"], jet_imgs_val["q"]], axis=0)
+    jet_imgs_val.pop("g")
+    jet_imgs_val.pop("q")
+    jet_imgs_test["qcd"] = np.concatenate([jet_imgs_test["g"], jet_imgs_test["q"]], axis=0)
+    jet_imgs_test.pop("g")
+    jet_imgs_test.pop("q")
+    
+    jet_types = list(jet_imgs_train.keys())
+    logging.info(f"jet types: {jet_types}")
 
     # create autoencoder
     logging.info("Creating autoencoder")
