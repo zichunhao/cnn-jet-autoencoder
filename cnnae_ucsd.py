@@ -74,19 +74,33 @@ def plot_jet_images(
     plt.close()
     return
 
+
 class NumpyEncoder(json.JSONEncoder):
-    """ Special json encoder for np types 
+    """Special json encoder for np types
     Source: https://github.com/mpld3/mpld3/issues/434#issuecomment-340255689
     """
+
     def default(self, obj):
-        if isinstance(obj, (np.int_, np.intc, np.intp, np.int8,
-            np.int16, np.int32, np.int64, np.uint8,
-            np.uint16,np.uint32, np.uint64)):
+        if isinstance(
+            obj,
+            (
+                np.int_,
+                np.intc,
+                np.intp,
+                np.int8,
+                np.int16,
+                np.int32,
+                np.int64,
+                np.uint8,
+                np.uint16,
+                np.uint32,
+                np.uint64,
+            ),
+        ):
             return int(obj)
-        elif isinstance(obj, (np.float_, np.float16, np.float32, 
-            np.float64)):
+        elif isinstance(obj, (np.float_, np.float16, np.float32, np.float64)):
             return float(obj)
-        elif isinstance(obj,(np.ndarray,)): #### This is the fix
+        elif isinstance(obj, (np.ndarray,)):  #### This is the fix
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
 
@@ -174,41 +188,54 @@ def main(
         #     jet_imgs[jet_type], test_size=0.2, random_state=42
         # )
         train_valid_size = int(0.8 * len(jet_imgs[jet_type]))
-        jet_img_train, jet_imgs_test[jet_type] = jet_imgs[jet_type][:train_valid_size], jet_imgs[jet_type][train_valid_size:]
+        jet_img_train, jet_imgs_test[jet_type] = (
+            jet_imgs[jet_type][:train_valid_size],
+            jet_imgs[jet_type][train_valid_size:],
+        )
         # train/validation split
         if num_jets is not None and num_jets > 0:
             if num_jets <= 1:
                 # use fraction of jets
                 num_jets = int(num_jets * len(jet_img_train))
-                logging.info(f"Using {num_jets} jets out of {len(jet_img_train)} for training")
+                logging.info(
+                    f"Using {num_jets} jets out of {len(jet_img_train)} for training"
+                )
             else:
                 try:
                     num_jets = int(num_jets)
-                    logging.info(f"Using {num_jets} jets out of {len(jet_img_train)} for training")
+                    logging.info(
+                        f"Using {num_jets} jets out of {len(jet_img_train)} for training"
+                    )
                 except ValueError as e:
                     # use all jets
                     logging.error(f"Error when parsing num_jets: {e}")
                     logging.error("Using all jets instead")
                     num_jets = len(jet_img_train)
             jet_img_train = jet_img_train[:num_jets]
-        
+
         jet_imgs_train[jet_type], jet_imgs_val[jet_type] = train_test_split(
-            jet_img_train, test_size=0.25, random_state=42
+            jet_img_train,
+            test_size=0.25,
+            random_state=args.seed if (args.seed is not None and args.seed > 0) else 42,
         )
-        
+
         del jet_img_train
-    
+
     # combine g and q jets to make qcd jets
-    jet_imgs_train["qcd"] = np.concatenate([jet_imgs_train["g"], jet_imgs_train["q"]], axis=0)
+    jet_imgs_train["qcd"] = np.concatenate(
+        [jet_imgs_train["g"], jet_imgs_train["q"]], axis=0
+    )
     jet_imgs_train.pop("g")
     jet_imgs_train.pop("q")
     jet_imgs_val["qcd"] = np.concatenate([jet_imgs_val["g"], jet_imgs_val["q"]], axis=0)
     jet_imgs_val.pop("g")
     jet_imgs_val.pop("q")
-    jet_imgs_test["qcd"] = np.concatenate([jet_imgs_test["g"], jet_imgs_test["q"]], axis=0)
+    jet_imgs_test["qcd"] = np.concatenate(
+        [jet_imgs_test["g"], jet_imgs_test["q"]], axis=0
+    )
     jet_imgs_test.pop("g")
     jet_imgs_test.pop("q")
-    
+
     jet_types = list(jet_imgs_train.keys())
     logging.info(f"jet types: {jet_types}")
 
@@ -323,7 +350,7 @@ def main(
                 np.concatenate([scores_bkg, scores_sig]),
             )
             auc = metrics.auc(fpr, tpr)
-            
+
         ae_stats[jet_type] = {
             "tpr": tpr,
             "fpr": fpr,
@@ -360,7 +387,7 @@ def main(
             np.concatenate([scores_bkg, scores_sig]),
         )
         auc = metrics.auc(fpr, tpr)
-    
+
     tpr_10_percent = tpr[np.searchsorted(fpr, 0.1)]
     tpr_1_percent = tpr[np.searchsorted(fpr, 0.01)]
 
@@ -384,7 +411,9 @@ def main(
     plt.savefig(fig_dir / f"roc_all.pdf")
     plt.close()
 
-    json.dump(ae_stats, open(proj_dir / "anomaly_detection.json", "w"), cls=NumpyEncoder)
+    json.dump(
+        ae_stats, open(proj_dir / "anomaly_detection.json", "w"), cls=NumpyEncoder
+    )
     torch.save(ae_stats, proj_dir / "anomaly_detection.pt")
 
     logging.info("Anomaly detection done")
@@ -393,6 +422,12 @@ def main(
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description="Train CNN autoencoder")
+    argparser.add_argument(
+        "--seed",
+        type=int,
+        default=-1,
+        help="Random seed for reproducibility. Default: -1 (no seed)",
+    )
 
     argparser.add_argument(
         "--proj-dir", type=str, required=True, help="Project directory"
@@ -427,6 +462,13 @@ if __name__ == "__main__":
 
     args = argparser.parse_args()
     logging.info(f"{args=}")
+
+    if args.seed >= 0:
+        logging.info(f"Setting random seed to {args.seed}")
+        torch.manual_seed(args.seed)
+        np.random.seed(args.seed)
+        import tensorflow as tf
+        tf.random.set_seed(args.seed)
 
     logging.info("Running script...")
     main(
